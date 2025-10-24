@@ -3,31 +3,31 @@
 let todoList = [];
 const GROQ_API = "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";
 
-let initList = function() {
-    let savedList = window.localStorage.getItem("todos");
-        if (savedList != null)
-            todoList = JSON.parse(savedList);
-        else
+// let initList = function() {
+//     let savedList = window.localStorage.getItem("todos");
+//         if (savedList != null)
+//             todoList = JSON.parse(savedList);
+//         else
 
-    //code creating a default list with 2 items
-    todoList.push(
-        {
-            title: "Learn JS",
-            description: "Create a demo application for my TODO's",
-            place: "445",
-            category: '',
-            dueDate: new Date(2024,10,16)
-        },
-        {
-            title: "Lecture test",
-            description: "Quick test from the first three lectures",
-            place: "F6",
-            category: '',
-            dueDate: new Date(2024,10,17)
-        }
-        // of course the lecture test mentioned above will not take place
-    );
-}
+//     //code creating a default list with 2 items
+//     todoList.push(
+//         {
+//             title: "Learn JS",
+//             description: "Create a demo application for my TODO's",
+//             place: "445",
+//             category: '',
+//             dueDate: new Date(2024,10,16)
+//         },
+//         {
+//             title: "Lecture test",
+//             description: "Quick test from the first three lectures",
+//             place: "F6",
+//             category: '',
+//             dueDate: new Date(2024,10,17)
+//         }
+//         // of course the lecture test mentioned above will not take place
+//     );
+// }
 
 // initList();
 
@@ -167,7 +167,7 @@ let checkTable = function(todo, searchInput, fromDate, toDate) {
 }
 
 let showTable = function(filteredList) {
-    const column = ['title', 'description', 'category', 'place', 'dueDate'];
+    const column = ['title', 'description', 'category', 'place', 'date'];
     let bodyTags = '';
     for(let i=0; i<filteredList.length; i++) {
         const todo = filteredList[i];
@@ -185,13 +185,13 @@ let showTable = function(filteredList) {
 
     if (bodyTags === '') {
         document.querySelector('thead').innerHTML = '';
-        document.querySelector('tbody').innerHTML = '<tr><td colspan="5">No matches</td></tr>';
+        document.querySelector('tbody').innerHTML = '<tr><td colspan="6">No matches</td></tr>';
     } else {
         let headTags = '<tr>';
         for (let i = 0; i < column.length; i++) {
             headTags += `<th>${column[i]}</th>`;
         }
-        headTags += `<th>Actions</th></tr>`;
+        headTags += `<th>Delete</th></tr>`;
 
         document.querySelector('thead').innerHTML = headTags;
         document.querySelector('tbody').innerHTML = bodyTags;
