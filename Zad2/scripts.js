@@ -2,6 +2,7 @@
 
 let todoList = [];
 const GROQ_API = "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";
+const x_master_key = "$2a$10$tccNxdVY6umQcRTgT9VhwurGKEnS75GK5EsvcW/c8kIkKxzNyKLQK";
 
 // let initList = function() {
 //     let savedList = window.localStorage.getItem("todos");
@@ -43,7 +44,7 @@ req.onreadystatechange = () => {
 
 
 req.open("GET", "https://api.jsonbin.io/v3/b/68e791be43b1c97be9600143/latest", true);
-req.setRequestHeader("X-Master-Key", "$2a$10$tccNxdVY6umQcRTgT9VhwurGKEnS75GK5EsvcW/c8kIkKxzNyKLQK");
+req.setRequestHeader("X-Master-Key", x_master_key);
 req.send();
 
 let updateJSONbin = function() {
@@ -57,7 +58,7 @@ let updateJSONbin = function() {
 
     upReq.open("PUT", "https://api.jsonbin.io/v3/b/68e791be43b1c97be9600143", true);
     upReq.setRequestHeader("Content-Type", "application/json");
-    upReq.setRequestHeader("X-Master-Key", "$2a$10$tccNxdVY6umQcRTgT9VhwurGKEnS75GK5EsvcW/c8kIkKxzNyKLQK");
+    upReq.setRequestHeader("X-Master-Key", x_master_key);
     upReq.send(JSON.stringify(todoList));
 }
 
@@ -159,7 +160,7 @@ let checkTable = function(todo, searchInput, fromDate, toDate) {
         return false;
     }
 
-    if(todo.title.includes(searchInput) || todo.description.includes(searchInput) || searchInput === "") {
+    if(todo.title.toLowerCase().includes(searchInput.toLowerCase()) || todo.description.toLowerCase().includes(searchInput.toLowerCase()) || searchInput === "") {
         return true;
     } else {
         return false;

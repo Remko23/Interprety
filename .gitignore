@@ -1,0 +1,13 @@
+
+# Node Modules
+node_modules/
+
+# Pliki VS Code
+.vscode/
+
+# Pliki Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Pliki Vim
+*.swp
