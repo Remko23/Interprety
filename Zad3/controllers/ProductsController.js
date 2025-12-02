@@ -84,6 +84,7 @@ exports.updateById = (req, res) => {
    });
 }
 
+
 // D1
 const generateSeoDesc = async (productData) => {
     const groqApiKey = process.env.GROQ_API_KEY;
@@ -108,9 +109,7 @@ const generateSeoDesc = async (productData) => {
             model: 'openai/gpt-oss-20b',
             messages: [{ 
                 role: 'user', 
-                content: prompt }],
-            temperature: 0.7,
-            max_tokens: 500,
+                content: prompt }]
         }, {
             headers: {
                 'Authorization': `Bearer ${groqApiKey}`,
