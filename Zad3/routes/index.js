@@ -9,6 +9,7 @@ const categoryRoutes = require('./categories');
 const orderRoutes = require('./orders');
 const statusRoutes = require('./statuses');
 
+// router.use('/', authRouter);
 router.use('/products', productRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/orders', orderRoutes);
