@@ -26,7 +26,7 @@ const InitController = {
                      continue; 
                 }
                 const newProduct = await Product.create(productData);
-                savedProducts.push(newProduct.attributes); // Bookshelf returns the model instance
+                savedProducts.push(newProduct.attributes);
             }
 
             if (savedProducts.length === 0) {
