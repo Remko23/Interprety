@@ -2,11 +2,11 @@ const User = require('../models/user');
 const { StatusCodes } = require('http-status-codes');
 const jwt = require('jsonwebtoken');
 
-const SECRET_KEY = 'my_secret_key';
-const REFRESH_SECRET_KEY = 'my_refresh_secret_key';
+const SECRET_KEY = process.env.SECRET_KEY;
+const REFRESH_SECRET_KEY = process.env.REFRESH_SECRET_KEY;
 
-const TOKEN_EXPIRATION = '1h'; 
-const REFRESH_TOKEN_EXPIRATION = '7d';
+const TOKEN_EXPIRATION = process.env.TOKEN_EXP; 
+const REFRESH_TOKEN_EXPIRATION = process.env.REFRESH_TOKEN_EXP;
 
 function generateTokens(user) {
     const payload = { 
