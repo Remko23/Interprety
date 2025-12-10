@@ -1,7 +1,11 @@
 "use strict"
 
 let todoList = [];
+<<<<<<< HEAD
 const GROQ_API = GROQ_API_KEY;
+=======
+const GROQ_API = "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";
+>>>>>>> 31d6324a345c7aa3030bff5c49fe61265ee7ed8b
 const x_master_key = "$2a$10$tccNxdVY6umQcRTgT9VhwurGKEnS75GK5EsvcW/c8kIkKxzNyKLQK";
 
 // let initList = function() {
