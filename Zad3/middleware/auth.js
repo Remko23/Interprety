@@ -1,22 +1,23 @@
 const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
+const { problem } = require('../utils/problem');
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
 exports.verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Brak tokenu dostępu.' });
+        return problem(res, StatusCodes.UNAUTHORIZED, 'Unathorized', 'Brak tokenu dostępu.', 'http://localhost:2323/probs/no-token');
     }
 
     const token = authHeader.split(' ')[1];
     if (!token) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'Błędny format tokenu dostępu (wymagany Bearer token).' });
+        return problem(res, StatusCodes.UNAUTHORIZED, 'Invalid authorization header', 'Błędny format tokenu dostępu (wymagany Bearer token).', 'http://localhost:2323/probs/bad-format');
     }
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(StatusCodes.FORBIDDEN).json({ message: 'Token jest nieprawidłowy lub wygasł.' });
+            return problem(res, StatusCodes.FORBIDDEN, 'Invalid or Expired Token', 'Token jest nieprawidłowy lub wygasł.', 'http://localhost:2323/probs/invalid-token');
         }
 
         req.user = decoded;
@@ -27,12 +28,12 @@ exports.verifyToken = (req, res, next) => {
 exports.checkRole = (allowedRoles) => {
     return (req, res, next) => {
         if (!req.user || !req.user.role) {
-            return res.status(StatusCodes.FORBIDDEN).json({ message: 'Brak informacji o roli użytkownika.' });
+            return problem(res, StatusCodes.FORBIDDEN, 'Missing Role', 'Brak informacji o roli użytkownika.', 'http://localhost:2323/probs/no-role');
         }
         if (allowedRoles.includes(req.user.role)) {
             next();
         } else {
-            res.status(StatusCodes.FORBIDDEN).json({ message: 'Brak uprawnień do wykonania tej operacji.' });
+            return problem(res, StatusCodes.FORBIDDEN, 'No Permission', 'Brak uprawnień do wykonania tej operacji.', 'http://localhost:2323/probs/forbidden');
         }
     };
 };

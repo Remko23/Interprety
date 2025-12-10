@@ -1,5 +1,6 @@
 const OrderStatus = require('../models/orderStatus');
 const { StatusCodes } = require('http-status-codes');
+const { problem } = require('../utils/problem');
 
 exports.getAll = (req, res) => {
    OrderStatus.getAll()
@@ -8,6 +9,6 @@ exports.getAll = (req, res) => {
    })
    .catch(err => {
        console.error(err);
-       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania stanów zamówień.' });
+       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania stanów zamówień.');
    });
 };

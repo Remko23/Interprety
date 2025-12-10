@@ -3,7 +3,9 @@ const Product = require('../models/product');
 const OrderItem = require('../models/orderItem');
 const knex = require('knex')(require('../config/knexfile'));
 const { StatusCodes } = require('http-status-codes');
+const { problem } = require('../utils/problem');
 const order = require('../models/order');
+
 const STATUS = {
     UNCONFIRMED: 1,
     CONFIRMED: 2,
@@ -72,7 +74,7 @@ exports.getAll = (req, res) => {
        }
    ).catch(err => {
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania zamówień.' });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień.');
     });
 };
 
@@ -83,7 +85,7 @@ exports.getById = (req, res) => {
        }
    ).catch(err => {
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania zamówienia.' });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień.');
     });
 };
 
@@ -94,7 +96,7 @@ exports.getByUser = (req, res) => {
    }
    ).catch(err => {
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania zamówień dla użytkownika.' });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień.');
     });
 };
 
@@ -105,7 +107,7 @@ exports.getByStatus = (req, res) => {
    }
    ).catch(err => {
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania zamówień wedlug statusu' });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień wedlug statusu.');
     });
 };
 
@@ -114,7 +116,7 @@ exports.store = async (req, res) => {
     const validationError = await validateOrderData(orderData); 
 
     if (validationError) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ message: validationError });
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, 'http://localhost:2323/probs/order-validation-failed');
     }
 
     const items = orderData.items;
@@ -125,10 +127,7 @@ exports.store = async (req, res) => {
 
     if (existingProducts.length !== productIds.length) {
         const missingIds = productIds.filter(id => !existingProducts.some(p => p.get('id') == id));
-        return res.status(StatusCodes.BAD_REQUEST).json({ 
-            message: `W zamówieniu są nieistniejące produkty o ID: ${missingIds.join(', ')}.`,
-            missing_products: missingIds
-        });
+        return problem(res, StatusCodes.BAD_REQUEST, 'Brak produktów', `W zamówieniu są nieistniejące produkty o ID: ${missingIds.join(', ')}.`, 'http://localhost:2323/probs/missing-products');
     }
 
     try {
@@ -143,7 +142,6 @@ exports.store = async (req, res) => {
 
             const orderId = newOrder.get('id');
 
-            // B. Przygotowanie danych dla order_items
             const orderItemsToInsert = items.map(item => {
                 const product = existingProducts.find(p => p.get('id') == item.product_id);
                 
@@ -167,47 +165,44 @@ exports.store = async (req, res) => {
 
     } catch (err) {
         console.error("Błąd podczas tworzenia zamówienia i elementów:", err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-            message: 'Błąd serwera podczas zapisywania zamówienia.',
-            details: err.message
-        });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Wystąpił błąd serwera podczas zapisywania zamówienia. Szczegóły: ${err.message}`);
     }
 };
 
 exports.updateById = (req, res) => {
-   Order.update(req.body.Order).then(
-       function(Order) {
-           res.json(Order);
-       }
-   )    
+    Order.update(req.body.Order).then(
+        function(Order) {
+            res.json(Order);
+        }
+    )    
 }
 
 exports.updateStatus = async (req, res) => {
     const orderId = req.params.id;
     const { status_id: newStatusId } = req.body;
     if (!newStatusId || isNaN(parseInt(newStatusId))) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ message: "Musisz podać poprawny ID nowego statusu (status_id)." });
+        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowy status', "Musisz podać poprawny ID nowego statusu (status_id).", 'http://localhost:2323/probs/invalid-status-id');
     }
 
     try {
         const orderRecord = await Order.getById(orderId); 
         if (!orderRecord) {
-            return res.status(StatusCodes.NOT_FOUND).json({ message: `Zamówienie o ID ${orderId} nie zostało znalezione.` });
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o ID ${orderId} nie zostało znalezione.`, 'http://localhost:2323/probs/order-not-found');
         }
         
         const currentStatusId = orderRecord.status_id;
         const validationError = validateStatusChange(currentStatusId, parseInt(newStatusId));
         
         if (validationError) {
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: validationError });
+            return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowa zmiana statusu', validationError, 'http://localhost:2323/probs/invalid-status-transition');
         }
-        await Order.updateStatus(orderId, parseInt(newStatusId)); // Zakładamy istnienie metody Order.updateStatus
+        await Order.updateStatus(orderId, parseInt(newStatusId));
         res.status(StatusCodes.OK).json({ 
             message: `Status zamówienia ID ${orderId} został zmieniony na ${newStatusId}.` 
         });
 
     } catch (err) {
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas aktualizacji statusu zamówienia.' });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas aktualizacji statusu zamówienia.');
     }
 };

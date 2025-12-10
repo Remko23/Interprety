@@ -1,6 +1,8 @@
 const Product = require('../models/product');
 const { StatusCodes } = require('http-status-codes');
 const axios = require('axios');
+const { problem } = require('../utils/problem');
+
 
 function validateData(product, isUpdate = false) {
     const price = parseFloat(product.price);
@@ -32,7 +34,7 @@ exports.getAll = (req, res) => {
        }
    ).catch(err => {
        console.error(err);
-       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania produktów.' });
+       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania produktów.');
    });
 };
 
@@ -43,7 +45,7 @@ exports.getById = (req, res) => {
         }
    ).catch(err => {
        console.error(err);
-       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania produktu.' });
+       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania produktu.');
    });
 };
 
@@ -53,7 +55,7 @@ exports.store = (req, res) => {
     const validationError = validateData(productData);
 
     if (validationError) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ message: validationError });
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, 'http://localhost:2323/probs/product-validation-failed');
     }
 
    const newProduct = Product.create({
@@ -69,19 +71,19 @@ exports.store = (req, res) => {
        });
    }).catch(err => {
        console.error(err);
-       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas dodawania produktu.' });
+       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas dodawania produktu.');
    });
 };
 
 exports.updateById = (req, res) => {
-   Product.update(req.body.product).then(
-       function(product) {
+    Product.update(req.body.product).then(
+        function(product) {
            res.json(product);
-       }
-   ).catch(err => {
+        }
+    ).catch(err => {
        console.error(err);
-       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas aktualizacji produktu.' });
-   });
+       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas aktualizacji produktu.');
+    });
 }
 
 
@@ -89,7 +91,7 @@ exports.updateById = (req, res) => {
 const generateSeoDesc = async (productData) => {
     const groqApiKey = process.env.GROQ_API_KEY;
     if (!groqApiKey) {
-        throw new Error('GROQ_API_KEY is not set in environment variables.');
+        throw new Error('GROQ_API_KEY nie jest ustawione w zmiennych środowiskowych.');
     }
 
     const prompt = `
@@ -121,7 +123,7 @@ const generateSeoDesc = async (productData) => {
 
     } catch (error) {
         console.error('Groq API Error:', error.response ? error.response.data : error.message);
-        throw new Error('Failed to generate SEO description via Groq API.');
+        throw new Error('Niepowodzenie podczas generowania opisu SEO przez Groq API.');
     }
 };
 
@@ -132,7 +134,7 @@ exports.getSeoDesc = async (req, res) => {
         const product = await Product.getById(id);
 
         if (!product) {
-            return res.status(StatusCodes.NOT_FOUND).json({ message: `Product with ID ${id} not found.` });
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Produkt o ID: ${id} nie znaleziony.`, 'http://localhost:2323/probs/product-not-found');
         }
 
         const productData = {
@@ -147,12 +149,9 @@ exports.getSeoDesc = async (req, res) => {
 
     } catch (err) {
         if (err.message.includes('not found')) {
-             return res.status(StatusCodes.NOT_FOUND).json({ message: err.message });
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', err.message, 'http://localhost:2323/probs/product-not-found');
         }
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-            message: 'Błąd serwera podczas generowania opisu SEO.',
-            detail: err.message 
-        });
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Błąd serwera podczas generowania opisu SEO. Szczegóły: ${err.message}`);
     }
 }

@@ -1,6 +1,6 @@
-//D3
 const { StatusCodes } = require('http-status-codes');
 const Product = require('../models/product');
+const { problem } = require('../utils/problem');
 
 const InitController = {
     init: async (req, res) => {
@@ -8,15 +8,11 @@ const InitController = {
             const existingProducts = await Product.getAll();
 
             if (existingProducts.length > 0) {
-                return res.status(StatusCodes.CONFLICT).json({
-                    message: 'Initialization failed. Products already exist in the database. Deletion required before re-initialization.',
-                });
+                return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Błąd inicjalizacji: Produkty już są w bazie danych', 'http://localhost:2323/probs/init-conflict');
             }
             const productsToInitialize = req.body;
             if (!Array.isArray(productsToInitialize) || productsToInitialize.length === 0) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    message: 'Invalid data format. Expected a non-empty array of product objects in JSON format.',
-                });
+                return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowy format danych', 'Oczekiwano listy produktów w formacie JSON.', 'http://localhost:2323/probs/invalid-data-format');
             }
 
             const savedProducts = [];
@@ -30,9 +26,7 @@ const InitController = {
             }
 
             if (savedProducts.length === 0) {
-                 return res.status(StatusCodes.BAD_REQUEST).json({
-                    message: 'No valid products were provided for initialization.',
-                });
+                return problem(res, StatusCodes.BAD_REQUEST, 'Brak poprawnych produktów', 'Nie podano żadnych poprawnych produktów do inicjalizacji.', 'http://localhost:2323/probs/no-valid-products');
             }
 
             return res.status(StatusCodes.OK).json({
@@ -42,10 +36,7 @@ const InitController = {
 
         } catch (error) {
             console.error('Error during database initialization:', error);
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                message: 'An internal error occurred during product initialization.',
-                error: error.message,
-            });
+            return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd wewnętrzny serwera', `Wystąpił błąd wewnętrzny podczas inicjalizacji produktów. Szczegóły: ${error.message}`);
         }
     },
 };
