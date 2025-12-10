@@ -38,9 +38,9 @@ exports.getAll = (req, res) => {
 
 exports.getById = (req, res) => {
    Product.getById(req.params.id).then(
-       function(product) {
+        function(product) {
            res.json(product);
-       }
+        }
    ).catch(err => {
        console.error(err);
        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Błąd serwera podczas pobierania produktu.' });
