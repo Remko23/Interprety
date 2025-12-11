@@ -1,11 +1,13 @@
 const bookshelf= require('../config/bookshelf');
 
-const Product = bookshelf.Model.extend({
+const ProductModel = bookshelf.Model.extend({
    tableName: 'products',
    category: function() {
        return this.belongsTo('Category', 'category_id');
    }
 })
+const Product = bookshelf.model('Product', ProductModel);
+module.exports.Model = Product;
 
 module.exports.getAll = () => {
    return Product.fetchAll({ withRelated: ['category'] });

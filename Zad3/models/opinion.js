@@ -1,7 +1,7 @@
 const bookshelf = require('../config/bookshelf');
 
-const OrderItem = bookshelf.Model.extend({
-    tableName: 'order_items',
+const Opinion = bookshelf.Model.extend({
+    tableName: 'opinions',
     hasTimestamps: false,
     
     product: function() {
@@ -12,4 +12,4 @@ const OrderItem = bookshelf.Model.extend({
     }
 });
 
-module.exports = bookshelf.model('OrderItem', OrderItem);
+module.exports = bookshelf.model('Opinion', Opinion);

@@ -1,10 +1,11 @@
 const Order = require('../models/order');
 const Product = require('../models/product');
+const ProductModel = Product.Model;
 const OrderItem = require('../models/orderItem');
 const knex = require('knex')(require('../config/knexfile'));
 const { StatusCodes } = require('http-status-codes');
 const { problem } = require('../utils/problem');
-const order = require('../models/order');
+const Opinion = require('../models/opinion');
 
 const STATUS = {
     UNCONFIRMED: 1,
@@ -67,6 +68,25 @@ function validateStatusChange(currentStatusId, newStatusId) {
     return null;
 }
 
+function validateOpinion(opinionData) {
+    const { rating, content } = opinionData;
+
+    if (!rating || isNaN(parseInt(rating))) {
+        return "Ocena jest wymagana i musi być liczbą całkowitą.";
+    }
+
+    const numericRating = parseInt(rating);
+    if (numericRating < 1 || numericRating > 5) {
+        return "Ocena musi być liczbą całkowitą z zakresu od 1 do 5.";
+    }
+    
+    if (!content || typeof content !== 'string' || content.trim().length < 5) {
+        return "Treść opinii jest wymagana i musi zawierać co najmniej 5 znaków.";
+    }
+
+    return null;
+}
+
 exports.getAll = (req, res) => {
    Order.getAll().then(
        function(allOrders) {
@@ -121,7 +141,7 @@ exports.store = async (req, res) => {
 
     const items = orderData.items;
     const productIds = items.map(item => item.product_id);
-    const existingProducts = await Product.query(qb => {
+    const existingProducts = await ProductModel.query(qb => {
         qb.whereIn('id', productIds);
     }).fetchAll();
 
@@ -153,7 +173,7 @@ exports.store = async (req, res) => {
                 };
             });
 
-            await OrderItem.collection(orderItemsToInsert).invokeThen('save', null, { transacting: trx });
+            await OrderItem.collection(orderItemsToInsert).invokeThen('save', null, { transacting: trx, method: 'insert' });
             
             return newOrder;
         });
@@ -204,5 +224,59 @@ exports.updateStatus = async (req, res) => {
     } catch (err) {
         console.error(err);
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas aktualizacji statusu zamówienia.');
+    }
+};
+
+exports.addOpinion = async (req, res) => {
+    const orderId = req.params.id;
+    const opinionData = req.body;
+    
+    const validationError = validateOpinion(opinionData);
+    if (validationError) {
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji opinii', validationError, 'http://localhost:2323/probs/opinion-validation-failed');
+    }
+
+    try {
+        const order = await Order.getById(orderId);
+        if (!order) {
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o nr. ID: ${orderId} nie zostało znalezione.`, 'http://localhost:2323/probs/order-not-found');
+        }
+
+        const currentStatusId = order.get('status_id');
+        
+        if (currentStatusId !== STATUS.COMPLETED && currentStatusId !== STATUS.CANCELED) {
+            return problem(res, StatusCodes.FORBIDDEN, 'Niedozwolona operacja', 'Opinię można dodać tylko do zamówienia które jest ZREALIZOWANE lub ANULOWANE.', 'http://localhost:2323/probs/opinion-status-forbidden');
+        }
+
+        const existingOpinion = await Opinion.where({ order_id: orderId }).fetch();
+        if (existingOpinion) {
+            return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Już dodano opinię do tego zamówienia.', 'http://localhost:2323/probs/opinion-already-exists');
+        }
+
+        if (req.user && req.user.role === 'KLIENT') {
+            const orderUserName = order.get('user_name');
+            if (req.user.username.toLowerCase() !== orderUserName.toLowerCase()) {
+                return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', 'http://localhost:2323/probs/opinion-user-mismatch');
+            }
+        }
+        
+        const opinionToSave = await Opinion.forge({
+            order_id: orderId,
+            rating: opinionData.rating,
+            content: opinionData.content,
+        }).save();
+
+        const newOpinion = await opinionToSave.save(null, { 
+            method: 'insert'
+        });
+        
+        res.status(StatusCodes.CREATED).json({
+            message: 'Opinia została dodana pomyślnie.',
+            opinion: newOpinion
+        });
+
+    } catch (err) {
+        console.error(err);
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Wystąpił błąd serwera podczas dodawania opinii. Szczegóły: ${err.message}`);
     }
 };

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 .env
-=======
-
->>>>>>> 31d6324a345c7aa3030bff5c49fe61265ee7ed8b
 # Node Modules
 node_modules/
 

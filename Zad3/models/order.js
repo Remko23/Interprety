@@ -10,12 +10,15 @@ const Order = bookshelf.Model.extend({
            qb.join('products', 'order_items.product_id', 'products.id')
              .select('order_items.*', 'products.name as product_name', 'products.price as product_price');
        });
-   }
+   },
+    opinion: function() {
+        return this.hasOne('Opinion', 'order_id');
+    }
 });
 
 module.exports = bookshelf.model('Order', Order);
 
-const baseQuery = { withRelated: ['status', 'items'] };
+const baseQuery = { withRelated: ['status', 'items', 'opinion'] };
 
 module.exports.getAll = () => {
    return Order.fetchAll(baseQuery);
