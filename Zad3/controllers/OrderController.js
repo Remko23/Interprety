@@ -236,6 +236,10 @@ exports.addOpinion = async (req, res) => {
         return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji opinii', validationError, 'http://localhost:2323/probs/opinion-validation-failed');
     }
 
+    if (!req.user || !req.user.id) {
+        return problem(res, StatusCodes.UNAUTHORIZED, 'Brak autoryzacji', 'Nie udało się zidentyfikować ID użytkownika. Upewnij się, że jesteś zalogowany.', 'http://localhost:2323/probs/unauthorized');
+    }
+
     try {
         const order = await Order.getById(orderId);
         if (!order) {
@@ -248,35 +252,46 @@ exports.addOpinion = async (req, res) => {
             return problem(res, StatusCodes.FORBIDDEN, 'Niedozwolona operacja', 'Opinię można dodać tylko do zamówienia które jest ZREALIZOWANE lub ANULOWANE.', 'http://localhost:2323/probs/opinion-status-forbidden');
         }
 
-        const existingOpinion = await Opinion.where({ order_id: orderId }).fetch();
+        const existingOpinion = await Opinion.where({ order_id: orderId }).fetch({ require: false }); 
         if (existingOpinion) {
             return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Już dodano opinię do tego zamówienia.', 'http://localhost:2323/probs/opinion-already-exists');
         }
 
         if (req.user && req.user.role === 'KLIENT') {
             const orderUserName = order.get('user_name');
-            if (req.user.username.toLowerCase() !== orderUserName.toLowerCase()) {
-                return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', 'http://localhost:2323/probs/opinion-user-mismatch');
+            const userNameFromToken = req.user.username;
+            
+            if (userNameFromToken && orderUserName) {
+                if (userNameFromToken.toLowerCase() !== orderUserName.toLowerCase()) {
+                    return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', 'http://localhost:2323/probs/opinion-user-mismatch');
+                }
+            } else if (order.get('user_id') && req.user.id !== order.get('user_id')) {
+                return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś. (Brak danych konta)', 'http://localhost:2323/probs/opinion-user-mismatch');
             }
         }
         
-        const opinionToSave = await Opinion.forge({
-            order_id: orderId,
-            rating: opinionData.rating,
-            content: opinionData.content,
-        }).save();
-
-        const newOpinion = await opinionToSave.save(null, { 
-            method: 'insert'
-        });
+        opinionData.order_id = orderId; 
+        opinionData.user_id = req.user.id;
+        
+        const opinionModel = Opinion.forge(opinionData);
+        
+        const result = await opinionModel.save(null, { method: 'insert', require: false }); 
+        const newId = Array.isArray(result) && result.length > 0 ? result[0] : opinionModel.id;
+    
+        if (newId) {
+            opinionModel.set('id', newId);
+        }
         
         res.status(StatusCodes.CREATED).json({
             message: 'Opinia została dodana pomyślnie.',
-            opinion: newOpinion
+            opinion: opinionModel
         });
 
     } catch (err) {
         console.error(err);
+        if (err.message && err.message.includes("EmptyResponse")) {
+            return problem(res, StatusCodes.NOT_FOUND, 'Błąd zapisu', 'Nie udało się wstawić rekordu (problem Bookshelf).', 'http://localhost:2323/probs/bookshelf-insert-error');
+        }
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Wystąpił błąd serwera podczas dodawania opinii. Szczegóły: ${err.message}`);
     }
 };

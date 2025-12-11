@@ -10,6 +10,6 @@ router.post('/', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), OrderControl
 router.get('/user/:userName', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), OrderController.getByUser);
 router.get('/status/:status_id', authMiddleware.checkRole(['PRACOWNIK']), OrderController.getByStatus);
 router.patch('/:id', authMiddleware.checkRole(['PRACOWNIK']), OrderController.updateStatus);
-router.post('/:id/opinion', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), OrderController.addOpinion);
+router.post('/:id/opinions', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), OrderController.addOpinion);
 
 module.exports = router;
