@@ -8,11 +8,11 @@ const InitController = {
             const existingProducts = await Product.getAll();
 
             if (existingProducts.length > 0) {
-                return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Błąd inicjalizacji: Produkty już są w bazie danych', 'http://localhost:2323/probs/init-conflict');
+                return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Błąd inicjalizacji: Produkty już są w bazie danych', '/init-conflict');
             }
             const productsToInitialize = req.body;
             if (!Array.isArray(productsToInitialize) || productsToInitialize.length === 0) {
-                return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowy format danych', 'Oczekiwano listy produktów w formacie JSON.', 'http://localhost:2323/probs/invalid-data-format');
+                return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowy format danych', 'Oczekiwano listy produktów w formacie JSON.', '/invalid-data-format');
             }
 
             const savedProducts = [];
@@ -26,7 +26,7 @@ const InitController = {
             }
 
             if (savedProducts.length === 0) {
-                return problem(res, StatusCodes.BAD_REQUEST, 'Brak poprawnych produktów', 'Nie podano żadnych poprawnych produktów do inicjalizacji.', 'http://localhost:2323/probs/no-valid-products');
+                return problem(res, StatusCodes.BAD_REQUEST, 'Brak poprawnych produktów', 'Nie podano żadnych poprawnych produktów do inicjalizacji.', '/no-valid-products');
             }
 
             return res.status(StatusCodes.OK).json({

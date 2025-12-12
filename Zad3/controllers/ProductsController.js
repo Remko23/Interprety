@@ -55,7 +55,7 @@ exports.store = (req, res) => {
     const validationError = validateData(productData);
 
     if (validationError) {
-        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, 'http://localhost:2323/probs/product-validation-failed');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, '/product-validation-failed');
     }
 
    const newProduct = Product.create({
@@ -76,6 +76,16 @@ exports.store = (req, res) => {
 };
 
 exports.updateById = (req, res) => {
+    const id = req.params.id;
+    const productData = req.body.product;
+    if (id != productData.id) {
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błędne id produktu', "Id produktu w ciele żądania różni się od id produktu z URL", '/wrong-product-id');
+    }
+
+    const validationError = validateData(productData);
+    if (validationError) {
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, '/product-validation-failed');
+    }
     Product.update(req.body.product).then(
         function(product) {
            res.json(product);
@@ -134,7 +144,7 @@ exports.getSeoDesc = async (req, res) => {
         const product = await Product.getById(id);
 
         if (!product) {
-            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Produkt o ID: ${id} nie znaleziony.`, 'http://localhost:2323/probs/product-not-found');
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Produkt o ID: ${id} nie znaleziony.`, '/product-not-found');
         }
 
         const productData = {
@@ -149,7 +159,7 @@ exports.getSeoDesc = async (req, res) => {
 
     } catch (err) {
         if (err.message.includes('not found')) {
-            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', err.message, 'http://localhost:2323/probs/product-not-found');
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', err.message, '/product-not-found');
         }
         console.error(err);
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Błąd serwera podczas generowania opisu SEO. Szczegóły: ${err.message}`);

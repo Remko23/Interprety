@@ -54,16 +54,11 @@ function validateStatusChange(currentStatusId, newStatusId) {
     if (currentStatusId === STATUS.CANCELED) {
         return "Nie można zmienić statusu ANULOWANEGO zamówienia.";
     }
-    if (currentStatusId === STATUS.COMPLETED) {
-        if (newStatusId === STATUS.UNCONFIRMED || newStatusId === STATUS.CONFIRMED) {
-             return "Nie można cofnąć statusu ZREALIZOWANEGO zamówienia.";
-        }
+    if (currentStatusId === STATUS.COMPLETED && newStatusId < currentStatusId) {
+        return "Nie można cofnąć statusu ZREALIZOWANEGO zamówienia.";
     }
     if (currentStatusId === STATUS.CONFIRMED && newStatusId === STATUS.UNCONFIRMED) {
         return "Nie można cofnąć zamówienia ze statusu ZATWIERDZONE na NIEZATWIERDZONE.";
-    }
-    if (currentStatusId === STATUS.COMPLETED && newStatusId === STATUS.CONFIRMED) {
-        return "Nie można cofnąć zamówienia ze statusu ZREALIZOWANE na ZATWIERDZONE.";
     }
     return null;
 }
@@ -111,10 +106,18 @@ exports.getById = (req, res) => {
 
 exports.getByUser = (req, res) => {
     const userName = req.params.userName
-   Order.getByUser(userName).then(orders => {
+    const user = req.user;
+
+    if (user && user.role === 'KLIENT') {
+        const userNameFromToken = user.login;
+        if (!userNameFromToken || userName.toLowerCase() !== userNameFromToken.toLowerCase()) {
+            return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz pobierać zamówienia tylko dla swojego użytkownika.', '/access-denied-user-mismatch');
+        }
+    }
+    Order.getByUser(userName).then(orders => {
         res.status(StatusCodes.OK).json(orders);
-   }
-   ).catch(err => {
+    }
+    ).catch(err => {
         console.error(err);
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień.');
     });
@@ -136,7 +139,7 @@ exports.store = async (req, res) => {
     const validationError = await validateOrderData(orderData); 
 
     if (validationError) {
-        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, 'http://localhost:2323/probs/order-validation-failed');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, '/order-validation-failed');
     }
 
     const items = orderData.items;
@@ -147,7 +150,7 @@ exports.store = async (req, res) => {
 
     if (existingProducts.length !== productIds.length) {
         const missingIds = productIds.filter(id => !existingProducts.some(p => p.get('id') == id));
-        return problem(res, StatusCodes.BAD_REQUEST, 'Brak produktów', `W zamówieniu są nieistniejące produkty o ID: ${missingIds.join(', ')}.`, 'http://localhost:2323/probs/missing-products');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Brak produktów', `W zamówieniu są nieistniejące produkty o ID: ${missingIds.join(', ')}.`, '/missing-products');
     }
 
     try {
@@ -201,20 +204,21 @@ exports.updateStatus = async (req, res) => {
     const orderId = req.params.id;
     const { status_id: newStatusId } = req.body;
     if (!newStatusId || isNaN(parseInt(newStatusId))) {
-        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowy status', "Musisz podać poprawny ID nowego statusu (status_id).", 'http://localhost:2323/probs/invalid-status-id');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowy status', "Musisz podać poprawny ID nowego statusu (status_id).", '/invalid-status-id');
     }
 
     try {
         const orderRecord = await Order.getById(orderId); 
         if (!orderRecord) {
-            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o ID ${orderId} nie zostało znalezione.`, 'http://localhost:2323/probs/order-not-found');
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o ID ${orderId} nie zostało znalezione.`, '/order-not-found');
         }
+        const currentStatusId = parseInt(orderRecord.get('status_id')); 
+        const numericNewStatusId = parseInt(newStatusId);
         
-        const currentStatusId = orderRecord.status_id;
-        const validationError = validateStatusChange(currentStatusId, parseInt(newStatusId));
+        const validationError = validateStatusChange(currentStatusId, numericNewStatusId);
         
         if (validationError) {
-            return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowa zmiana statusu', validationError, 'http://localhost:2323/probs/invalid-status-transition');
+            return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowa zmiana statusu', validationError, '/invalid-status-transition');
         }
         await Order.updateStatus(orderId, parseInt(newStatusId));
         res.status(StatusCodes.OK).json({ 
@@ -233,28 +237,28 @@ exports.addOpinion = async (req, res) => {
     
     const validationError = validateOpinion(opinionData);
     if (validationError) {
-        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji opinii', validationError, 'http://localhost:2323/probs/opinion-validation-failed');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji opinii', validationError, '/opinion-validation-failed');
     }
 
     if (!req.user || !req.user.id) {
-        return problem(res, StatusCodes.UNAUTHORIZED, 'Brak autoryzacji', 'Nie udało się zidentyfikować ID użytkownika. Upewnij się, że jesteś zalogowany.', 'http://localhost:2323/probs/unauthorized');
+        return problem(res, StatusCodes.UNAUTHORIZED, 'Brak autoryzacji', 'Nie udało się zidentyfikować ID użytkownika. Upewnij się, że jesteś zalogowany.', '/unauthorized');
     }
 
     try {
         const order = await Order.getById(orderId);
         if (!order) {
-            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o nr. ID: ${orderId} nie zostało znalezione.`, 'http://localhost:2323/probs/order-not-found');
+            return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o nr. ID: ${orderId} nie zostało znalezione.`, '/order-not-found');
         }
 
         const currentStatusId = order.get('status_id');
         
         if (currentStatusId !== STATUS.COMPLETED && currentStatusId !== STATUS.CANCELED) {
-            return problem(res, StatusCodes.FORBIDDEN, 'Niedozwolona operacja', 'Opinię można dodać tylko do zamówienia które jest ZREALIZOWANE lub ANULOWANE.', 'http://localhost:2323/probs/opinion-status-forbidden');
+            return problem(res, StatusCodes.FORBIDDEN, 'Niedozwolona operacja', 'Opinię można dodać tylko do zamówienia które jest ZREALIZOWANE lub ANULOWANE.', '/opinion-status-forbidden');
         }
 
         const existingOpinion = await Opinion.where({ order_id: orderId }).fetch({ require: false }); 
         if (existingOpinion) {
-            return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Już dodano opinię do tego zamówienia.', 'http://localhost:2323/probs/opinion-already-exists');
+            return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Już dodano opinię do tego zamówienia.', '/opinion-already-exists');
         }
 
         if (req.user && req.user.role === 'KLIENT') {
@@ -263,10 +267,10 @@ exports.addOpinion = async (req, res) => {
             
             if (userNameFromToken && orderUserName) {
                 if (userNameFromToken.toLowerCase() !== orderUserName.toLowerCase()) {
-                    return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', 'http://localhost:2323/probs/opinion-user-mismatch');
+                    return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', '/opinion-user-mismatch');
                 }
             } else if (order.get('user_id') && req.user.id !== order.get('user_id')) {
-                return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś. (Brak danych konta)', 'http://localhost:2323/probs/opinion-user-mismatch');
+                return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś. (Brak danych konta)', '/opinion-user-mismatch');
             }
         }
         
@@ -290,7 +294,7 @@ exports.addOpinion = async (req, res) => {
     } catch (err) {
         console.error(err);
         if (err.message && err.message.includes("EmptyResponse")) {
-            return problem(res, StatusCodes.NOT_FOUND, 'Błąd zapisu', 'Nie udało się wstawić rekordu (problem Bookshelf).', 'http://localhost:2323/probs/bookshelf-insert-error');
+            return problem(res, StatusCodes.NOT_FOUND, 'Błąd zapisu', 'Nie udało się wstawić rekordu (problem Bookshelf).', '/bookshelf-insert-error');
         }
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Wystąpił błąd serwera podczas dodawania opinii. Szczegóły: ${err.message}`);
     }

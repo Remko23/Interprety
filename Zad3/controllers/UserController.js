@@ -26,19 +26,19 @@ exports.login = async (req, res) => {
     const { login, password } = req.body; 
 
     if (!login || !password) {
-        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowe żądanie', "Login i hasło są wymagane.", 'http://localhost:2323/probs/missing-credentials');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowe żądanie', "Login i hasło są wymagane.", '/missing-credentials');
     }
 
     try {
         const user = await User.getByLogin(login); 
 
         if (!user) {
-            return problem(res, StatusCodes.UNAUTHORIZED, 'Błąd autoryzacji', "Nieprawidłowe dane uwierzytelniające.", 'http://localhost:2323/probs/invalid-credentials');
+            return problem(res, StatusCodes.UNAUTHORIZED, 'Błąd autoryzacji', "Nieprawidłowe dane uwierzytelniające.", '/invalid-credentials');
         }
 
         user.comparePassword(password, (err, isMatch) => {
             if (err || !isMatch) {
-                return problem(res, StatusCodes.UNAUTHORIZED, 'Błąd autoryzacji', "Nieprawidłowe dane uwierzytelniające.", 'http://localhost:2323/probs/invalid-credentials');
+                return problem(res, StatusCodes.UNAUTHORIZED, 'Błąd autoryzacji', "Nieprawidłowe dane uwierzytelniające.", '/invalid-credentials');
             }
 
             const { accessToken, refreshToken } = generateTokens(user);
@@ -61,19 +61,19 @@ exports.refreshToken = (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowe żądanie', 'Refresh Token jest wymagany.', 'http://localhost:2323/probs/missing-token');
+        return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowe żądanie', 'Refresh Token jest wymagany.', '/missing-token');
     }
 
     jwt.verify(refreshToken, REFRESH_SECRET_KEY, async (err, decoded) => {
         if (err) {
-            return problem(res, StatusCodes.FORBIDDEN, 'Odmowa dostępu', 'Nieprawidłowy lub wygasły Refresh Token.', 'http://localhost:2323/probs/expired-token');
+            return problem(res, StatusCodes.FORBIDDEN, 'Odmowa dostępu', 'Nieprawidłowy lub wygasły Refresh Token.', '/expired-token');
         }
 
         try {
             const user = await new User({ id: decoded.id }).fetch();
 
             if (!user) {
-                return problem(res, StatusCodes.UNAUTHORIZED, 'Błąd autoryzacji', 'Użytkownik nie istnieje.', 'http://localhost:2323/probs/user-not-found');
+                return problem(res, StatusCodes.UNAUTHORIZED, 'Błąd autoryzacji', 'Użytkownik nie istnieje.', '/user-not-found');
             }
 
             const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);

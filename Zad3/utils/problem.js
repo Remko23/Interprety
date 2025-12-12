@@ -1,5 +1,9 @@
 function problem(res, status, title, detail, type = 'about:blank') {
-    return res.status(status).json({
+    const url = "http://localhost:2323/probs"
+    if (type != 'about:blank') {
+        type = url + type;
+    }
+    return res.status(status).set('Content-Type', 'application/problem+json').json({
         type,
         title,
         status,
