@@ -7,10 +7,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
 const routes = require('./routes/index');
-
+const cors = require('cors');
 const app = express();
 
-const cors = require('cors');
 app.use(cors());
 
 app.use(bodyParser.json());
