@@ -1,92 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import axios from 'axios';
 
-const Checkout = ({ cart, setCart }) => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-  const [user, setUser] = useState({ name: '', email: '', phone: '' });
-  const [errors, setErrors] = useState({});
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+const Checkout = ({ cart, clearCart }) => {
+  const [contact, setContact] = useState({ username: '', email: '', phone: '' });
+  const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    if (!token) {
-      navigate('/login');
+  const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Walidacja frontendowa
+    if (!contact.email.includes('@')) {
+        setMessage("Błędny format email");
+        return;
     }
-  }, [token, navigate]);
 
-  if (!token) return null;
+    const orderData = {
+      contact,
+      items: cart,
+      totalValue: total
+    };
 
-  const validate = () => {
-    let tempErrors = {};
-    if (!user.name) tempErrors.name = "Nazwa jest wymagana";
-    if (!/\S+@\S+\.\S+/.test(user.email)) tempErrors.email = "Email jest nieprawidłowy";
-    if (!/^\d{9}$/.test(user.phone)) tempErrors.phone = "Telefon musi mieć 9 cyfr";
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:2323/orders', orderData, {
+          headers: { Authorization: `Bearer ${token}` }
+      });
+      setMessage("Zamówienie złożone pomyślnie!");
+      clearCart();
+    } catch (err) {
+      setMessage("Błąd podczas składania zamówienia. Czy jesteś zalogowany?");
+    }
   };
 
- const submitOrder = () => {
-  if (!validate()) return;
-  
-  const orderData = {
-    user,
-    items: cart.map(i => ({ product_id: i.id, quantity: i.quantity }))
-  };
-
-  axios.post('http://localhost:2323/orders', orderData, {
-    headers: { Authorization: token }
-  })
-  .then(() => {
-    alert("Zamówienie złożone!");
-    setCart([]);
-    navigate('/');
-  })
-  .catch(err => {
-    if (err.response?.status === 401) navigate('/login');
-    alert("Błąd: " + (err.response?.data?.message || "Serwer nie odpowiada"));
-  });
-};
+  if (cart.length === 0 && !message) return <div className="container mt-4">Koszyk jest pusty.</div>;
 
   return (
-    <div className="row">
-      <div className="col-md-8">
-        <h4>Twoje produkty</h4>
-        <table className="table">
-          <thead><tr><th>Nazwa</th><th>Ilość</th><th>Suma</th><th></th></tr></thead>
-          <tbody>
-            {cart.map(item => (
-              <tr key={item.id}>
-                <td>{item.name}</td>
-                <td>
-                  <button className="btn btn-sm btn-secondary me-2" onClick={() => {/* logika - */}}>-</button>
-                  {item.quantity}
-                  <button className="btn btn-sm btn-secondary ms-2" onClick={() => {/* logika + */}}>+</button>
-                </td>
-                <td>{(item.price * item.quantity).toFixed(2)} PLN</td>
-                <td><button className="btn btn-danger btn-sm" onClick={() => setCart(cart.filter(i => i.id !== item.id))}>Usuń</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <h5>Łącznie: {total.toFixed(2)} PLN</h5>
-      </div>
-      <div className="col-md-4">
-        <h4>Dane kontaktowe</h4>
-        <div className="mb-2">
-          <input className={`form-control ${errors.name ? 'is-invalid' : ''}`} placeholder="Imię i nazwisko" onChange={e => setUser({...user, name: e.target.value})} />
-          <div className="invalid-feedback">{errors.name}</div>
-        </div>
-        <div className="mb-2">
-          <input className={`form-control ${errors.email ? 'is-invalid' : ''}`} placeholder="Email" onChange={e => setUser({...user, email: e.target.value})} />
-          <div className="invalid-feedback">{errors.email}</div>
-        </div>
-        <div className="mb-2">
-          <input className={`form-control ${errors.phone ? 'is-invalid' : ''}`} placeholder="Telefon" onChange={e => setUser({...user, phone: e.target.value})} />
-          <div className="invalid-feedback">{errors.phone}</div>
-        </div>
-        <button className="btn btn-success w-100 mt-3" onClick={submitOrder} disabled={cart.length === 0}>Złóż zamówienie</button>
-      </div>
+    <div className="container mt-4">
+      <h2>Twoje zamówienie</h2>
+      <table className="table">
+        <thead>
+          <tr><th>Towar</th><th>Sztuk</th><th>Suma</th></tr>
+        </thead>
+        <tbody>
+          {cart.map(item => (
+            <tr key={item.id}>
+              <td>{item.name}</td>
+              <td>{item.quantity || 1}</td>
+              <td>{(item.price * (item.quantity || 1)).toFixed(2)} zł</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <h4>Suma całkowita: {total.toFixed(2)} zł</h4>
+
+      <form onSubmit={handleSubmit} className="mt-4 p-3 border rounded bg-light">
+        <h5>Dane kontaktowe</h5>
+        <input className="form-control mb-2" placeholder="Nazwa użytkownika" required
+               onChange={e => setContact({...contact, username: e.target.value})} />
+        <input className="form-control mb-2" type="email" placeholder="Email" required
+               onChange={e => setContact({...contact, email: e.target.value})} />
+        <input className="form-control mb-2" placeholder="Telefon" required
+               onChange={e => setContact({...contact, phone: e.target.value})} />
+        <button className="btn btn-success">Potwierdzam zamówienie</button>
+      </form>
+      {message && <div className="alert alert-info mt-3">{message}</div>}
     </div>
   );
 };
