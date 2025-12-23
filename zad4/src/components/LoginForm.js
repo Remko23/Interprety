@@ -1,58 +1,44 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-function LoginForm() {
-  const [login, setLogin] = useState('');
-  const [password, setPassword] = useState('');
+const LoginForm = ({ setToken }) => {
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [form, setForm] = useState({ username: '', password: '' });
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     try {
-      const response = await fetch('http://localhost:2323/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login, password })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        alert('Zalogowano pomyślnie!');
+      if (isRegisterMode) {
+        const res = await axios.post('http://localhost:2323/users/register', form);
+        setMessage(res.data.message);
+        setIsRegisterMode(false); // Po rejestracji przełącz na logowanie
       } else {
-        alert('Błąd: ' + data.detail);
+        const res = await axios.post('http://localhost:2323/users/login', form);
+        localStorage.setItem('token', res.data.token);
+        setToken(res.data.token);
       }
-    } catch (error) {
-      console.error("Błąd połączenia:", error);
+    } catch (err) {
+      setMessage("Błąd: " + (err.response?.data?.message || "Błąd połączenia"));
     }
   };
 
   return (
-    <div className="container mt-5">
-      <form onSubmit={handleSubmit} className="col-md-4 mx-auto">
-        <h2>Logowanie</h2>
-        <div className="mb-3">
-          <label className="form-label">Login</label>
-          <input 
-            type="login" 
-            className="form-control" 
-            value={login} 
-            onChange={(e) => setLogin(e.target.value)} 
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Hasło</label>
-          <input 
-            type="password" 
-            className="form-control" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">Zaloguj</button>
+    <div className="card p-4 shadow-sm mx-auto" style={{ maxWidth: '400px' }}>
+      <h4>{isRegisterMode ? 'Rejestracja' : 'Logowanie'}</h4>
+      <form onSubmit={handleSubmit}>
+        <input className="form-control mb-2" placeholder="Login" 
+               onChange={e => setForm({...form, username: e.target.value})} />
+        <input className="form-control mb-2" type="password" placeholder="Hasło" 
+               onChange={e => setForm({...form, password: e.target.value})} />
+        <button className="btn btn-primary w-100">{isRegisterMode ? 'Zarejestruj się' : 'Zaloguj'}</button>
       </form>
+      {message && <div className="alert alert-info mt-2">{message}</div>}
+      <button className="btn btn-link mt-2" onClick={() => setIsRegisterMode(!isRegisterMode)}>
+        {isRegisterMode ? 'Masz konto? Zaloguj się' : 'Nie masz konta? Zarejestruj się'}
+      </button>
     </div>
   );
-}
+};
 
 export default LoginForm;

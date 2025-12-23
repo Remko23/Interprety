@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const ProductList = ({ addToCart }) => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState({ name: '', category: '' });
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    // Pobieranie produktów i kategorii z backendu zad3
-    axios.get('http://localhost:2323/products').then(res => setProducts(res.data));
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    axios.get('http://localhost:2323/products', { headers: { Authorization: token } })
+      .then(res => setProducts(res.data))
+      .catch(err => { if(err.response?.status === 401) navigate('/login'); });
+
     axios.get('http://localhost:2323/categories').then(res => setCategories(res.data));
-  }, []);
+  }, [token, navigate]);
+
+  if (!token) return null;
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(filter.name.toLowerCase()) &&

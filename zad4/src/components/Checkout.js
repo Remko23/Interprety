@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Checkout = ({ cart, setCart }) => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
   const [user, setUser] = useState({ name: '', email: '', phone: '' });
   const [errors, setErrors] = useState({});
-
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate]);
+
+  if (!token) return null;
 
   const validate = () => {
     let tempErrors = {};
@@ -16,21 +26,27 @@ const Checkout = ({ cart, setCart }) => {
     return Object.keys(tempErrors).length === 0;
   };
 
-  const submitOrder = () => {
-    if (!validate()) return;
-    
-    const orderData = {
-      user,
-      items: cart.map(i => ({ product_id: i.id, quantity: i.quantity }))
-    };
-
-    axios.post('http://localhost:2323/orders', orderData)
-      .then(() => {
-        alert("Zamówienie złożone!");
-        setCart([]);
-      })
-      .catch(err => alert("Błąd: " + err.response.data.message));
+ const submitOrder = () => {
+  if (!validate()) return;
+  
+  const orderData = {
+    user,
+    items: cart.map(i => ({ product_id: i.id, quantity: i.quantity }))
   };
+
+  axios.post('http://localhost:2323/orders', orderData, {
+    headers: { Authorization: token }
+  })
+  .then(() => {
+    alert("Zamówienie złożone!");
+    setCart([]);
+    navigate('/');
+  })
+  .catch(err => {
+    if (err.response?.status === 401) navigate('/login');
+    alert("Błąd: " + (err.response?.data?.message || "Serwer nie odpowiada"));
+  });
+};
 
   return (
     <div className="row">

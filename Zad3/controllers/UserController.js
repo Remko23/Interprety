@@ -57,6 +57,26 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.register = async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Nazwa użytkownika i hasło są wymagane' });
+    }
+
+    try {
+        const existingUser = await new User({ username }).fetch({ require: false });
+        if (existingUser) {
+            return res.status(StatusCodes.CONFLICT).json({ error: 'Użytkownik o takiej nazwie już istnieje' });
+        }
+        const newUser = await new User({ username, password, role: 'customer' }).save();
+        
+        res.status(StatusCodes.CREATED).json({ message: 'Rejestracja zakończona sukcesem. Możesz się teraz zalogować.' });
+    } catch (err) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Błąd serwera podczas rejestracji' });
+    }
+};
+
 exports.refreshToken = (req, res) => {
     const { refreshToken } = req.body;
 

@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import ProductList from './components/ProductList';
 import Checkout from './components/Checkout';
 import OrderManagement from './components/OrderManagement';
+import axios from 'axios';
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -18,6 +19,17 @@ function App() {
       setCart([...cart, { ...product, quantity: 1 }]);
     }
   };
+
+  axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
   return (
     <Router>
