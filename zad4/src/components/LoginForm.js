@@ -12,9 +12,9 @@ const LoginForm = ({ setToken }) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:2323/login', { username, password });
-      const token = response.data.token;
-      localStorage.setItem('token', token);
-      setToken(token);
+      const accessToken = response.data.accessToken;
+      localStorage.setItem('token', accessToken);
+      setToken(accessToken);
       navigate('/');
     } catch (err) {
       setError('Błędne dane logowania');
