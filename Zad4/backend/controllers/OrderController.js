@@ -232,6 +232,15 @@ exports.updateStatus = async (req, res) => {
     }
 };
 
+exports.getOpinions = (req, res) => {
+    Opinion.fetchAll({ withRelated: ['order'] }).then(opinions => {
+        res.status(StatusCodes.OK).json(opinions);
+    }).catch(err => {
+        console.error(err);
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd podczas pobierania opinii.');
+    });
+};
+
 exports.addOpinion = async (req, res) => {
     const orderId = req.params.id;
     const opinionData = req.body;
@@ -264,28 +273,21 @@ exports.addOpinion = async (req, res) => {
 
         if (req.user && req.user.role === 'KLIENT') {
             const orderUserName = order.get('user_name');
-            const userNameFromToken = req.user.username;
+            const userLoginFromToken = req.user.login;
 
-            if (userNameFromToken && orderUserName) {
-                if (userNameFromToken.toLowerCase() !== orderUserName.toLowerCase()) {
+            if (userLoginFromToken && orderUserName) {
+                if (userLoginFromToken.toLowerCase() !== orderUserName.toLowerCase()) {
                     return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', '/opinion-user-mismatch');
                 }
-            } else if (order.get('user_id') && req.user.id !== order.get('user_id')) {
-                return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś. (Brak danych konta)', '/opinion-user-mismatch');
+            } else {
+                console.warn("Opinion User Mismatch Check Skipped due to missing data", { userLoginFromToken, orderUserName });
             }
         }
 
         opinionData.order_id = orderId;
         opinionData.user_id = req.user.id;
 
-        const opinionModel = Opinion.forge(opinionData);
-
-        const result = await opinionModel.save(null, { method: 'insert', require: false });
-        const newId = Array.isArray(result) && result.length > 0 ? result[0] : opinionModel.id;
-
-        if (newId) {
-            opinionModel.set('id', newId);
-        }
+        const opinionModel = await Opinion.forge(opinionData).save();
 
         res.status(StatusCodes.CREATED).json({
             message: 'Opinia została dodana pomyślnie.',
@@ -294,9 +296,6 @@ exports.addOpinion = async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        if (err.message && err.message.includes("EmptyResponse")) {
-            return problem(res, StatusCodes.NOT_FOUND, 'Błąd zapisu', 'Nie udało się wstawić rekordu (problem Bookshelf).', '/bookshelf-insert-error');
-        }
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', `Wystąpił błąd serwera podczas dodawania opinii. Szczegóły: ${err.message}`);
     }
 };

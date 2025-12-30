@@ -41,6 +41,7 @@
               <th>Wartość</th>
               <th>Klient</th>
               <th>Produkty (szt.)</th>
+              <th>Opinia</th>
               <th>Status</th>
               <th class="text-center">Akcje</th>
             </tr>
@@ -68,8 +69,17 @@
                 </ul>
               </td>
               <td>
-                <span :class="getStatusBadgeClass(order.status?.name)">
-                  {{ order.status?.name }}
+                 <div v-if="order.opinion && order.opinion.id">
+                     <span class="badge bg-warning text-dark me-1">★ {{ order.opinion.rating }}</span>
+                     <button @click="openOpinionModal(order.opinion)" class="btn btn-sm btn-outline-info" title="Zobacz treść">
+                         Podgląd
+                     </button>
+                 </div>
+                 <span v-else class="text-muted small">brak</span>
+              </td>
+              <td>
+                <span class="text-pink fw-bold">
+                  {{ translateStatus(order.status?.name) }}
                 </span>
               </td>
               <td class="text-center">
@@ -107,12 +117,46 @@
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
-              <td colspan="7" class="text-center py-4 text-muted">
+              <td colspan="8" class="text-center py-4 text-muted">
                 Brak zamówień o statusie: {{ currentFilter }}
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+    
+    <div v-if="showOpinionModal" class="modal-backdrop fade show"></div>
+    <div v-if="showOpinionModal" class="modal fade show d-block" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Opinia klienta</h5>
+            <button type="button" class="btn-close" @click="closeOpinionModal"></button>
+          </div>
+          <div class="modal-body" v-if="selectedOpinion">
+            <div class="mb-3">
+                <strong>Ocena:</strong> 
+                <span class="text-warning ms-2">
+                    <span v-for="n in 5" :key="n" class="fs-5">
+                         {{ n <= selectedOpinion.rating ? '★' : '☆' }}
+                    </span>
+                </span>
+            </div>
+            <div class="mb-3">
+                <strong>Treść:</strong>
+                <p class="mt-2 p-3 bg-light rounded border">
+                    {{ selectedOpinion.content }}
+                </p>
+            </div>
+            <div class="text-end text-muted small">
+                 Dodano: {{ formatDate(selectedOpinion.created_at) }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeOpinionModal">Zamknij</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -181,24 +225,32 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleString("pl-PL");
 };
 
-const getStatusBadgeClass = (status) => {
-  switch (status?.toUpperCase()) {
-    case "ZREALIZOWANE":
-    case "COMPLETED":
-      return "badge bg-success";
-    case "ANULOWANE":
-    case "CANCELED":
-      return "badge bg-danger";
-    case "NIEZREALIZOWANE":
-    case "UNCONFIRMED":
-    case "NOWE":
-      return "badge bg-warning text-dark";
-    case "CONFIRMED":
-    case "ZATWIERDZONE":
-      return "badge bg-primary";
-    default:
-      return "badge bg-info";
-  }
+const translateStatus = (status) => {
+    switch (status?.toUpperCase()) {
+        case 'ZREALIZOWANE':
+        case 'COMPLETED': return 'ZREALIZOWANE';
+        case 'ANULOWANE':
+        case 'CANCELED': return 'ANULOWANE';
+        case 'NIEZREALIZOWANE':
+        case 'UNCONFIRMED': return 'NIEZATWIERDZONE';
+        case 'NOWE': return 'NOWE';
+        case 'CONFIRMED':
+        case 'ZATWIERDZONE': return 'ZATWIERDZONE';
+        default: return status;
+    }
+};
+
+const showOpinionModal = ref(false);
+const selectedOpinion = ref(null);
+
+const openOpinionModal = (opinion) => {
+    selectedOpinion.value = opinion;
+    showOpinionModal.value = true;
+};
+
+const closeOpinionModal = () => {
+    showOpinionModal.value = false;
+    selectedOpinion.value = null;
 };
 
 onMounted(fetchOrders);
@@ -210,5 +262,8 @@ onMounted(fetchOrders);
 }
 .italic {
   font-style: italic;
+}
+.modal-backdrop {
+    background-color: rgba(0,0,0,0.5);
 }
 </style>

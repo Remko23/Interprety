@@ -1,0 +1,279 @@
+:root {
+    --neon-bg: #050A14;
+    --neon-surface: #0a1120;
+    --neon-text: #e0fbfc;
+    --neon-primary: #bb00bb;
+    --neon-primary-dim: rgba(0, 243, 255, 0.1);
+    --neon-secondary: #d600ff;
+    --neon-success: #00ff41;
+    --neon-danger: #ff003c;
+    --neon-warning: #ffbd00;
+    --neon-border-radius: 8px;
+    --neon-glow: 0 0 10px;
+}
+
+body {
+    background-color: var(--neon-bg) !important;
+    color: var(--neon-text) !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--neon-primary);
+    text-shadow: 0 0 5px var(--neon-primary-dim);
+}
+
+a {
+    color: var(--neon-primary);
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--neon-secondary);
+    text-shadow: 0 0 8px var(--neon-secondary);
+    text-decoration: none;
+}
+
+/* Navbar */
+.navbar {
+    background-color: rgba(5, 10, 20, 0.95) !important;
+    border-bottom: 1px solid var(--neon-primary);
+    box-shadow: 0 1px 15px var(--neon-primary-dim);
+}
+
+.navbar-brand {
+    color: var(--neon-primary) !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--neon-primary);
+}
+
+.nav-link {
+    color: var(--neon-text) !important;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: var(--neon-secondary) !important;
+    text-shadow: 0 0 8px var(--neon-secondary);
+}
+
+/* Cards */
+.card {
+    background-color: var(--neon-surface) !important;
+    border: 1px solid rgba(0, 243, 255, 0.3) !important;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    color: var(--neon-text);
+    border-radius: var(--neon-border-radius);
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2) !important;
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--neon-border-radius);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    color: var(--neon-primary);
+    border: 1px solid var(--neon-primary);
+    box-shadow: 0 0 5px var(--neon-primary-dim);
+}
+
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus {
+    background-color: var(--neon-primary);
+    color: var(--neon-bg);
+    box-shadow: 0 0 20px var(--neon-primary);
+    border-color: var(--neon-primary);
+}
+
+.btn-outline-primary {
+    color: var(--neon-primary);
+    border-color: var(--neon-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--neon-primary);
+    box-shadow: 0 0 15px var(--neon-primary);
+}
+
+
+.btn-success {
+    color: var(--neon-success);
+    border: 1px solid var(--neon-success);
+    background-color: transparent;
+}
+
+.btn-success:hover {
+    background-color: var(--neon-success);
+    color: var(--neon-bg);
+    box-shadow: 0 0 20px var(--neon-success);
+}
+
+.btn-danger,
+.btn-outline-danger {
+    color: var(--neon-danger);
+    border: 1px solid var(--neon-danger);
+    background-color: transparent;
+}
+
+.btn-danger:hover,
+.btn-outline-danger:hover {
+    background-color: var(--neon-danger);
+    color: white;
+    box-shadow: 0 0 20px var(--neon-danger);
+}
+
+.btn-secondary,
+.btn-outline-secondary {
+    color: var(--neon-text);
+    border: 1px solid var(--neon-text);
+}
+
+.btn-secondary:hover {
+    background-color: var(--neon-text);
+    color: var(--neon-bg);
+    box-shadow: 0 0 10px white;
+}
+
+
+/* Forms */
+.form-control,
+.form-select {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--neon-text) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: var(--neon-primary);
+    box-shadow: 0 0 10px var(--neon-primary-dim);
+}
+
+/* Fix for select options (browser dependent, but attempts to style) */
+option {
+    background-color: var(--neon-bg);
+    color: var(--neon-text);
+}
+
+/* Tables */
+.table {
+    color: var(--neon-text) !important;
+    border-color: rgba(255, 255, 255, 0.1);
+    --bs-table-bg: transparent !important;
+    /* Override bootstrap variable */
+    --bs-table-color: var(--neon-text) !important;
+}
+
+.table thead th {
+    background-color: var(--neon-surface) !important;
+    color: var(--neon-primary);
+    border-bottom: 2px solid var(--neon-primary);
+}
+
+.table tbody td {
+    background-color: transparent !important;
+    color: var(--neon-text) !important;
+}
+
+.table-hover tbody tr:hover td {
+    color: var(--neon-text);
+    background-color: rgba(0, 243, 255, 0.05) !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    background-color: var(--neon-surface) !important;
+    border: 1px solid var(--neon-primary);
+    box-shadow: 0 0 15px var(--neon-primary-dim);
+}
+
+.dropdown-item {
+    color: var(--neon-text) !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--neon-primary-dim) !important;
+    color: var(--neon-primary) !important;
+}
+
+.dropdown-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modals */
+.modal-content {
+    background-color: var(--neon-bg);
+    border: 1px solid var(--neon-primary);
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 243, 255, 0.3);
+}
+
+.btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Alerts */
+.alert-info {
+    background-color: rgba(0, 243, 255, 0.1);
+    border-color: var(--neon-primary);
+    color: var(--neon-primary);
+}
+
+.alert-danger {
+    background-color: rgba(255, 0, 60, 0.1);
+    border-color: var(--neon-danger);
+    color: var(--neon-danger);
+}
+
+/* Utilities Overrides */
+.bg-light {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--neon-text) !important;
+}
+
+.list-group-item {
+    background-color: transparent !important;
+    color: var(--neon-text) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Text Utilities */
+.text-muted,
+.small {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.text-pink {
+    color: var(--neon-secondary) !important;
+    text-shadow: 0 0 5px var(--neon-secondary);
+}

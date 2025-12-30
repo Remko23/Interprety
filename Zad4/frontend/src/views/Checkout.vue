@@ -1,15 +1,23 @@
 <template>
   <div class="container mt-4">
-    <h2 class="mb-4">Twoje Zamówienie</h2>
-
-    <div v-if="cartStore.items.length === 0" class="alert alert-info shadow-sm">
-      Twój koszyk jest pusty.
-      <router-link to="/" class="alert-link"
-        >Wróć do listy produktów</router-link
-      >, aby coś dodać.
+    <div v-if="orderSuccess" class="text-center py-5">
+      <div class="mb-4 text-success display-1">✓</div>
+      <h2 class="mb-3">Dziękujemy!</h2>
+      <p class="lead mb-4">Twoje zamówienie zostało pomyślnie złożone.</p>
+      <router-link to="/" class="btn btn-primary btn-lg">Wróć do strony głównej</router-link>
     </div>
 
-    <div v-else class="row">
+    <div v-else>
+      <h2 class="mb-4">Twoje Zamówienie</h2>
+
+      <div v-if="cartStore.items.length === 0" class="alert alert-info shadow-sm">
+        Twój koszyk jest pusty.
+        <router-link to="/" class="alert-link"
+          >Wróć do listy produktów</router-link
+        >, aby coś dodać.
+      </div>
+
+      <div v-else class="row">
       <div class="col-lg-8">
         <div class="card shadow-sm mb-4">
           <div class="card-body p-0">
@@ -72,6 +80,7 @@
                   class="form-control"
                   placeholder="Nazwa użytkownika"
                   required
+                  :disabled="authStore.isAuthenticated"
                 />
               </div>
               <div class="mb-3">
@@ -124,25 +133,35 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useCartStore } from "@/stores/cart";
+import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
 import { useRouter } from "vue-router";
 
 const cartStore = useCartStore();
+const authStore = useAuthStore();
 const router = useRouter();
 
 const loading = ref(false);
 const errorMessage = ref("");
+const orderSuccess = ref(false);
 
 const userData = reactive({
   username: "",
   email: "",
   phone: "",
+});
+
+onMounted(() => {
+    if (authStore.user && authStore.user.login) {
+        userData.username = authStore.user.login;
+    }
 });
 
 const handleOrderSubmit = async () => {
@@ -164,14 +183,12 @@ const handleOrderSubmit = async () => {
     // Wysłanie zamówienia na backend (endpoint z Zad3)
     await axios.post("/api/orders", orderData);
 
-    alert("Dziękujemy! Zamówienie zostało złożone.");
-
     // Czyszczenie koszyka po sukcesie
     cartStore.items = [];
     cartStore.save();
 
-    // Przekierowanie na stronę główną
-    router.push("/");
+    // Pokazanie ekranu sukcesu
+    orderSuccess.value = true;
   } catch (error) {
     // Obsługa błędów przesyłanych z serwera
     if (error.response && error.response.data) {

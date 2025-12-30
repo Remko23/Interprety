@@ -4,6 +4,7 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const IndexController = require('../controllers/IndexController');
 const InitController = require('../controllers/InitController');
+const OrderController = require('../controllers/OrderController');
 
 const productRoutes = require('./products');
 const categoryRoutes = require('./categories');
@@ -13,7 +14,8 @@ const userRoutes = require('./users');
 
 router.get('/', IndexController.home);
 
-router.post('/init', InitController.init);
+router.post('/init', authMiddleware.verifyToken, authMiddleware.checkRole(['PRACOWNIK']), InitController.init);
+router.get('/opinions', OrderController.getOpinions);
 
 router.use('/users', userRoutes);
 

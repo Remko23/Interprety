@@ -95,7 +95,7 @@ const handleLogin = async () => {
     });
 
     // 2. Używamy store do zapisania stanu
-    auth.login(response.data.accessToken, response.data.user);
+    auth.login(response.data.accessToken, response.data.refreshToken, response.data.user);
 
     router.push("/");
   } catch (err) {
