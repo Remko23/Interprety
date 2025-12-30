@@ -52,14 +52,14 @@
                 to="/register"
                 class="btn btn-outline-secondary btn-sm"
               >
-                Zarejestruj się jako klient
+                Zarejestruj się
               </router-link>
             </div>
           </div>
         </div>
         <div class="text-center mt-3">
           <router-link to="/" class="text-decoration-none small text-secondary">
-            ← Wróć do sklepu bez logowania
+            Wróć do sklepu bez logowania
           </router-link>
         </div>
       </div>
@@ -88,18 +88,14 @@ const handleLogin = async () => {
   errorMessage.value = "";
 
   try {
-    // 1. Wysyłamy loginData.username jako login i password
     const response = await axios.post("/api/users/login", {
       login: loginData.username,
       password: loginData.password,
     });
-
-    // 2. Używamy store do zapisania stanu
     auth.login(response.data.accessToken, response.data.refreshToken, response.data.user);
 
     router.push("/");
   } catch (err) {
-    // 4. Backend używa funkcji 'problem', więc opis błędu jest w .detail
     errorMessage.value =
       err.response?.data?.detail ||
       err.response?.data?.message ||
@@ -109,12 +105,3 @@ const handleLogin = async () => {
   }
 };
 </script>
-
-<style scoped>
-.card {
-  border-radius: 10px;
-}
-.card-header {
-  border-radius: 10px 10px 0 0 !important;
-}
-</style>

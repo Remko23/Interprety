@@ -7,20 +7,20 @@ const { problem } = require('../utils/problem');
 function validateData(product, isUpdate = false) {
     const price = parseFloat(product.price);
     const weight = parseFloat(product.weight);
-    
-    if(!product.name || !product.description) {
+
+    if (!product.name || !product.description) {
         return "Nazwa i opis produktu nie mogą być puste.";
     }
 
-    if(isNaN(price) || isNaN(weight) || price<=0 || weight<=0) {
+    if (isNaN(price) || isNaN(weight) || price <= 0 || weight <= 0) {
         return "Cena i waga muszą być liczbami większymi od zera.";
     }
 
-    if(isUpdate && !product.category_id) {
+    if (isUpdate && !product.category_id) {
         return "Trzeba podać kategorię.";
     }
 
-    if(product.category_id && isNaN(parseInt(product.category_id))) {
+    if (product.category_id && isNaN(parseInt(product.category_id))) {
         return "ID Kategorii musi być liczbą calkowitą.";
     }
 
@@ -28,25 +28,25 @@ function validateData(product, isUpdate = false) {
 }
 
 exports.getAll = (req, res) => {
-   Product.getAll().then(
-       function(allProducts) {
-           res.json(allProducts);
-       }
-   ).catch(err => {
-       console.error(err);
-       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania produktów.');
-   });
+    Product.getAll().then(
+        function (allProducts) {
+            res.json(allProducts);
+        }
+    ).catch(err => {
+        console.error(err);
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania produktów.');
+    });
 };
 
 exports.getById = (req, res) => {
-   Product.getById(req.params.id).then(
-        function(product) {
-           res.json(product);
+    Product.getById(req.params.id).then(
+        function (product) {
+            res.json(product);
         }
-   ).catch(err => {
-       console.error(err);
-       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania produktu.');
-   });
+    ).catch(err => {
+        console.error(err);
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania produktu.');
+    });
 };
 
 exports.store = (req, res) => {
@@ -58,21 +58,21 @@ exports.store = (req, res) => {
         return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, '/product-validation-failed');
     }
 
-   const newProduct = Product.create({
-       'name': req.body.name,
-       'description': req.body.description,
-       'price': req.body.price,
-       'weight': req.body.weight,
-       'category_id': req.body.category_id,
-   }).then(function() {
-       res.json({
-           'status':'saved!',
-           'product': newProduct,
-       });
-   }).catch(err => {
-       console.error(err);
-       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas dodawania produktu.');
-   });
+    const newProduct = Product.create({
+        'name': req.body.name,
+        'description': req.body.description,
+        'price': req.body.price,
+        'weight': req.body.weight,
+        'category_id': req.body.category_id,
+    }).then(function () {
+        res.json({
+            'status': 'saved!',
+            'product': newProduct,
+        });
+    }).catch(err => {
+        console.error(err);
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas dodawania produktu.');
+    });
 };
 
 exports.updateById = (req, res) => {
@@ -87,12 +87,12 @@ exports.updateById = (req, res) => {
         return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, '/product-validation-failed');
     }
     Product.update(req.body.product).then(
-        function(product) {
-           res.json(product);
+        function (product) {
+            res.json(product);
         }
     ).catch(err => {
-       console.error(err);
-       return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas aktualizacji produktu.');
+        console.error(err);
+        return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas aktualizacji produktu.');
     });
 }
 
@@ -110,7 +110,7 @@ const generateSeoDesc = async (productData) => {
         - Cena: ${productData.price} PLN
         - Opis: ${productData.description}
         - Waga: ${productData.weight}
-        Przeanalizuj je oraz na ich podstawie Wygeneruj unikalny, angażujący i zoptymalizowany pod kątem SEO opis tego produktu na 150-250 słów. 
+        Przeanalizuj je oraz na ich podstawie Wygeneruj unikalny, angażujący i zoptymalizowany pod kątem SEO opis tego produktu na 50-120 słów. 
         Opis powinien zachęcać do kupna oraz zawierać słowa kluczowe związane z nazwą produktu.
         Zwróć opis w czystym formacie HTML, używając tagów <p> dla akapitów i opcjonalnie <strong> dla najważniejszych fragmentów.
         NIE ZWRACAJ ŻADNEGO INNEGO TEKSTU, TYLKO GOTOWY KOD HTML.
@@ -119,9 +119,10 @@ const generateSeoDesc = async (productData) => {
     try {
         const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
             model: 'openai/gpt-oss-20b',
-            messages: [{ 
-                role: 'user', 
-                content: prompt }]
+            messages: [{
+                role: 'user',
+                content: prompt
+            }]
         }, {
             headers: {
                 'Authorization': `Bearer ${groqApiKey}`,
@@ -153,7 +154,7 @@ exports.getSeoDesc = async (req, res) => {
             description: product.get('description'),
             weight: product.get('weight'),
         };
-        
+
         const seoDescriptionHtml = await generateSeoDesc(productData);
         res.status(StatusCodes.OK).send(seoDescriptionHtml);
 

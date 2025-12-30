@@ -3,9 +3,6 @@
     <div class="container">
       <router-link class="navbar-brand" to="/">Sklep</router-link>
       <div class="navbar-nav ms-auto">
-        <router-link class="nav-link" to="/checkout"
-          >Koszyk ({{ cart.count }})</router-link
-        >
         <template v-if="auth.user?.role === 'PRACOWNIK'">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -20,6 +17,7 @@
           </li>
         </template>
         
+        <router-link class="nav-link" to="/checkout">Koszyk ({{ cart.count }})</router-link>
         <router-link v-if="auth.user && ['KLIENT', 'PRACOWNIK'].includes(auth.user.role)" class="nav-link" to="/my-orders">Moje zamówienia</router-link>
         <router-link class="nav-link" to="/opinions">Opinie</router-link>
 

@@ -4,13 +4,13 @@ const authMiddleware = require('../middleware/auth');
 
 const ProductsController = require('../controllers/ProductsController');
 
-router.get('/', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), ProductsController.getAll);
-router.get('/:id', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), ProductsController.getById);
+router.get('/', ProductsController.getAll);
+router.get('/:id', ProductsController.getById);
 
-router.get('/:id/seo-description', authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), ProductsController.getSeoDesc);
+router.get('/:id/seo-description', authMiddleware.verifyToken, authMiddleware.checkRole(['KLIENT', 'PRACOWNIK']), ProductsController.getSeoDesc);
 
-router.post('/', authMiddleware.checkRole(['PRACOWNIK']), ProductsController.store);
+router.post('/', authMiddleware.verifyToken, authMiddleware.checkRole(['PRACOWNIK']), ProductsController.store);
 
-router.put('/:id', authMiddleware.checkRole(['PRACOWNIK']), ProductsController.updateById);
+router.put('/:id', authMiddleware.verifyToken, authMiddleware.checkRole(['PRACOWNIK']), ProductsController.updateById);
 
 module.exports = router;

@@ -3,12 +3,12 @@
     <div class="row justify-content-center">
       <div class="col-md-8">
         <div class="card shadow">
-          <div class="card-header bg-danger text-white">
+          <div class="card-header text-white">
             <h4 class="mb-0">Inicjalizacja Bazy Danych</h4>
           </div>
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                 <p class="text-muted mb-0">
+                 <p class="mb-0">
                     Użyj tego narzędzia, aby załadować wstępne dane produktów do bazy.
                     <br />
                     <strong>Uwaga:</strong> Baza danych musi być pusta.
@@ -38,7 +38,7 @@
 
             <button
               @click="initDatabase"
-              class="btn btn-danger w-100"
+              class="btn w-100"
               :disabled="loading || !fileContent"
             >
               <span
@@ -74,7 +74,7 @@ const handleFileUpload = (event) => {
 
   if (file.type !== "application/json" && !file.name.endsWith(".json")) {
     error.value = "Proszę wybrać plik JSON.";
-    event.target.value = ""; // Clear input
+    event.target.value = "";
     return;
   }
 
@@ -82,8 +82,6 @@ const handleFileUpload = (event) => {
   reader.onload = (e) => {
     try {
       let json = JSON.parse(e.target.result);
-      
-      // Obsługa formatu { "products": [...] }
       if (!Array.isArray(json) && json.products && Array.isArray(json.products)) {
         json = json.products;
       }
@@ -91,7 +89,6 @@ const handleFileUpload = (event) => {
       if (!Array.isArray(json)) {
         throw new Error("Plik musi zawierać tablicę produktów (lub obiekt z polem 'products').");
       }
-      // Opcjonalna walidacja struktury
       if (json.length > 0) {
         const sample = json[0];
         if (!sample.name || !sample.price) {
@@ -102,7 +99,7 @@ const handleFileUpload = (event) => {
       fileContent.value = json;
     } catch (err) {
       error.value = "Błąd parsowania pliku: " + err.message;
-      event.target.value = ""; // Clear input
+      event.target.value = "";
     }
   };
   reader.readAsText(file);
@@ -118,7 +115,7 @@ const initDatabase = async () => {
   try {
     const response = await axios.post("/api/init", fileContent.value);
     success.value = response.data.message || "Baza danych została zainicjalizowana.";
-    fileContent.value = null; // Clear content to prevent double submit
+    fileContent.value = null;
   } catch (err) {
     if (err.response) {
       if (err.response.status === 409) {

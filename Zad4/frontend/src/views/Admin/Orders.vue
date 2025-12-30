@@ -50,7 +50,7 @@
             <tr v-for="order in filteredOrders" :key="order.id">
               <td class="fw-bold">#{{ order.id }}</td>
               <td>{{ formatDate(order.approval_date) }}</td>
-              <td class="text-success fw-bold">
+              <td class="text-warning fw-bold">
                 {{ calculateTotal(order.items) }} zł
               </td>
               <td>
@@ -70,12 +70,11 @@
               </td>
               <td>
                  <div v-if="order.opinion && order.opinion.id">
-                     <span class="badge bg-warning text-dark me-1">★ {{ order.opinion.rating }}</span>
                      <button @click="openOpinionModal(order.opinion)" class="btn btn-sm btn-outline-info" title="Zobacz treść">
                          Podgląd
                      </button>
                  </div>
-                 <span v-else class="text-muted small">brak</span>
+                 <span v-else class="text-warning small">-</span>
               </td>
               <td>
                 <span class="text-pink fw-bold">
@@ -113,7 +112,7 @@
                     Anuluj
                   </button>
                 </div>
-                <span v-else class="text-muted small italic">Brak akcji</span>
+                <span v-else class="text-warning small italic">-</span>
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
@@ -165,7 +164,6 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
-import { useAuthStore } from "@/stores/auth";
 
 const orders = ref([]);
 const availableStatuses = ref([]);
@@ -213,7 +211,6 @@ const updateStatus = async (orderId, newStatusName) => {
   }
 };
 
-// Funkcje pomocnicze
 const calculateTotal = (items) => {
   return items
     .reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
@@ -221,7 +218,7 @@ const calculateTotal = (items) => {
 };
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return "Brak daty";
+  if (!dateStr) return "-";
   return new Date(dateStr).toLocaleString("pl-PL");
 };
 
@@ -255,15 +252,3 @@ const closeOpinionModal = () => {
 
 onMounted(fetchOrders);
 </script>
-
-<style scoped>
-.smaller {
-  font-size: 0.85rem;
-}
-.italic {
-  font-style: italic;
-}
-.modal-backdrop {
-    background-color: rgba(0,0,0,0.5);
-}
-</style>

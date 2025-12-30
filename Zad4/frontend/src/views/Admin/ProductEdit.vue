@@ -4,7 +4,7 @@
       <div class="col-md-8">
         <div class="card shadow">
           <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Edycja Produktu #{{ productId }}</h4>
+            <h4 class="mb-0">Edytuj Produkt</h4>
           </div>
           <div class="card-body">
             <div v-if="loadingData" class="text-center py-5">
@@ -32,11 +32,11 @@
               <div class="row">
                   <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Cena (zł)</label>
-                    <input v-model.number="product.price" type="number" step="0.01" class="form-control" required />
+                    <input v-model.number="product.price" type="text" class="form-control" required />
                   </div>
                   <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Waga (kg)</label>
-                    <input v-model.number="product.weight" type="number" step="0.01" class="form-control" required />
+                    <input v-model.number="product.weight" type="text" class="form-control" required />
                   </div>
                   <div class="col-md-4 mb-3">
                     <label class="form-label fw-bold">Kategoria</label>
@@ -104,18 +104,12 @@ const fetchData = async () => {
 const optimizeDescription = async () => {
     seoLoading.value = true;
     try {
-        const res = await axios.get(`/api/products/${productId}/seo-description`);
-        // The backend returns text/plain or json? Checking OrderController/ProductsController logic implies it might return text or object
-        // Let's assume text or { description: ... }
-        // Wait, ProductsController.getSeoDesc:
-        // res.status(StatusCodes.OK).send(desc); -> Text response likely.
-        
+        const res = await axios.get(`/api/products/${productId}/seo-description`);        
         if (typeof res.data === 'string') {
             product.value.description = res.data;
         } else if (res.data.description) {
             product.value.description = res.data.description;
         } else {
-             // Fallback
              product.value.description = JSON.stringify(res.data);
         }
     } catch(err) {

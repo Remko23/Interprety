@@ -5,7 +5,7 @@
         <input
           v-model="filters.name"
           class="form-control"
-          placeholder="Filtruj po nazwie..."
+          placeholder="Filtruj produkty..."
         />
       </div>
       <div class="col-md-6">
@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <table class="table table-hover border">
+    <table class="table table-hover">
       <thead class="table-light">
         <tr>
           <th>Nazwa</th>
@@ -29,8 +29,8 @@
       </thead>
       <tbody>
         <tr v-for="p in filteredProducts" :key="p.id">
-          <td>{{ p.name }}</td>
-          <td v-html="p.description"></td>
+          <td><strong>{{ p.name }}</strong></td>
+          <td v-html="p.description" class="small"></td>
           <td>{{ p.price }} zł</td>
           <td class="text-end">
             <button @click="cart.addToCart(p)" class="btn btn-success btn-sm">

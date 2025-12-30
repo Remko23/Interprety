@@ -67,7 +67,7 @@ exports.register = async (req, res) => {
 
     try {
         const existingUser = await new User({ login }).fetch({ require: false });
-        if (existingUser) {
+        if (existingUser || login.toLowerCase().includes('niezalogowany')) {
             return problem(res, StatusCodes.CONFLICT, 'Duplikat', 'Użytkownik o takiej nazwie już istnieje.', '/user-exists');
         }
 

@@ -4,7 +4,7 @@ import App from './App.vue'
 import router from './router'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
-import './assets/neon-theme.css'
+import './assets/theme.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -32,7 +32,6 @@ axios.interceptors.response.use(
                     const { accessToken, refreshToken } = response.data;
                     auth.login(accessToken, refreshToken, auth.user);
 
-                    // Update header for the retry
                     originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
                     return axios(originalRequest);
                 } catch (refreshError) {

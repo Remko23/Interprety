@@ -1,8 +1,7 @@
 <template>
   <div class="container mt-4">
     <div v-if="orderSuccess" class="text-center py-5">
-      <div class="mb-4 text-success display-1">✓</div>
-      <h2 class="mb-3">Dziękujemy!</h2>
+      <h2 class="mb-3 text-warning">Dziękujemy!</h2>
       <p class="lead mb-4">Twoje zamówienie zostało pomyślnie złożone.</p>
       <router-link to="/" class="btn btn-primary btn-lg">Wróć do strony głównej</router-link>
     </div>
@@ -64,12 +63,35 @@
       </div>
 
       <div class="col-lg-4">
-        <div class="card shadow-sm border-primary">
-          <div class="card-header bg-primary text-white">
+        <div class="card">
+          <div class="card-header">
             <h5 class="card-title mb-0">Dane kontaktowe</h5>
           </div>
           <div class="card-body">
             <form @submit.prevent="handleOrderSubmit">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Imię</label>
+                  <input
+                    v-model="userData.firstName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Wpisz imię"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold">Nazwisko</label>
+                  <input
+                    v-model="userData.lastName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Wpisz nazwisko"
+                    required
+                  />
+                </div>
+              </div>
+
               <div class="mb-3">
                 <label class="form-label small fw-bold"
                   >Nazwa użytkownika</label
@@ -80,7 +102,7 @@
                   class="form-control"
                   placeholder="Nazwa użytkownika"
                   required
-                  :disabled="authStore.isAuthenticated"
+                  readonly
                 />
               </div>
               <div class="mb-3">
@@ -108,7 +130,7 @@
 
               <div class="d-flex justify-content-between mb-3">
                 <span class="h5">Suma:</span>
-                <span class="h5 text-primary"
+                <span class="h5 text-warning"
                   >{{ cartStore.totalPrice }} zł</span
                 >
               </div>
@@ -161,14 +183,14 @@ const userData = reactive({
 onMounted(() => {
     if (authStore.user && authStore.user.login) {
         userData.username = authStore.user.login;
+    } else {
+        userData.username = "niezalogowany";
     }
 });
 
 const handleOrderSubmit = async () => {
   loading.value = true;
   errorMessage.value = "";
-
-  // Przygotowanie danych do wysyłki (zgodnie z API)
   const orderData = {
     user_name: userData.username,
     email: userData.email,
@@ -180,19 +202,12 @@ const handleOrderSubmit = async () => {
   };
 
   try {
-    // Wysłanie zamówienia na backend (endpoint z Zad3)
     await axios.post("/api/orders", orderData);
-
-    // Czyszczenie koszyka po sukcesie
     cartStore.items = [];
     cartStore.save();
-
-    // Pokazanie ekranu sukcesu
     orderSuccess.value = true;
   } catch (error) {
-    // Obsługa błędów przesyłanych z serwera
     if (error.response && error.response.data) {
-      // Jeśli serwer zwrócił szczegóły (np. format Problem Details)
       errorMessage.value =
         error.response.data.detail ||
         error.response.data.message ||
@@ -205,11 +220,3 @@ const handleOrderSubmit = async () => {
   }
 };
 </script>
-
-<style scoped>
-@media (max-width: 768px) {
-  .table-responsive {
-    border: 0;
-  }
-}
-</style>

@@ -14,8 +14,7 @@
       <div v-for="order in orders" :key="order.id" class="card mb-3 shadow-sm">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
           <span>
-            <strong>Zamówienie nr. {{ order.id }}</strong>
-            <small class="text-muted ms-2">({{ formatDate(order.created_at) }})</small>
+            <strong  class="text-warning">Zamówienie nr. {{ order.id }}</strong>
           </span>
           <span class="text-pink fw-bold">
             {{ translateStatus(order.status?.name) }}
@@ -29,14 +28,14 @@
              </li>
           </ul>
           <div class="d-flex justify-content-between align-items-center">
-               <h5 class="text-primary mb-0">Suma: {{ calculateTotal(order.items) }} zł</h5>
+               <h5 class="text-warning mb-0">Suma: {{ calculateTotal(order.items) }} zł</h5>
                
                <div v-if="canRate(order)">
                    <button v-if="!order.opinion" @click="openRateModal(order)" class="btn btn-outline-warning">
                        Oceń zamówienie
                    </button>
-                   <span v-else class="text-success fw-bold">
-                       Opinia dodana
+                   <span v-else class="text-warning fw-bold">
+                       Opinia dodana!
                    </span>
                </div>
           </div>
@@ -44,7 +43,6 @@
       </div>
     </div>
 
-    <!-- Modal Oceny -->
     <div v-if="showModal" class="modal-backdrop fade show"></div>
     <div v-if="showModal" class="modal fade show d-block" tabindex="-1">
       <div class="modal-dialog">
@@ -118,7 +116,7 @@ const fetchMyOrders = async () => {
     loading.value = true;
     try {
         const response = await axios.get(`/api/orders/user/${auth.user.login}`);
-        orders.value = response.data.reverse(); // Najnowsze na górze
+        orders.value = response.data.reverse();
     } catch (error) {
         console.error(error);
     } finally {
@@ -163,8 +161,6 @@ const submitOpinion = async () => {
         });
         
         successMsg.value = "Opinia dodana pomyślnie!";
-        
-        // Refresh orders to update local state (show 'Opinia dodana')
         await fetchMyOrders();
         
         setTimeout(() => {
@@ -206,9 +202,3 @@ const translateStatus = (status) => {
 
 onMounted(fetchMyOrders);
 </script>
-
-<style scoped>
-.modal-backdrop {
-    background-color: rgba(0,0,0,0.5);
-}
-</style>

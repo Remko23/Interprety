@@ -20,11 +20,10 @@ router.get('/opinions', OrderController.getOpinions);
 router.use('/users', userRoutes);
 
 router.use('/categories', categoryRoutes);
+router.use('/products', productRoutes);
+router.use('/orders', orderRoutes);
 router.use('/status', statusRoutes);
 
 router.use(authMiddleware.verifyToken);
-
-router.use('/products', productRoutes);
-router.use('/orders', orderRoutes);
 
 module.exports = router;

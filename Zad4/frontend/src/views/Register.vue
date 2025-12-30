@@ -87,7 +87,6 @@ const handleRegister = async () => {
   success.value = "";
 
   try {
-    // User controller expects 'login' and 'password'
     await axios.post("/api/users/register", {
         login: registerData.login,
         password: registerData.password
@@ -96,7 +95,7 @@ const handleRegister = async () => {
     success.value = "Konto zostało utworzone. Za chwilę nastąpi przekierowanie do logowania...";
     
     setTimeout(() => {
-        router.push("/login"); // Redirect to login as per D2 Requirement
+        router.push("/login");
     }, 2000);
 
   } catch (err) {

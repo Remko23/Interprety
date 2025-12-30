@@ -20,7 +20,7 @@
                                  {{ n <= opinion.rating ? '★' : '☆' }}
                              </span>
                          </div>
-                         <small class="text-muted">{{ formatDate(opinion.created_at) }}</small>
+                         <small>{{ formatDate(opinion.created_at) }}</small>
                     </div>
                     <p class="card-text">{{ opinion.content }}</p>
                 </div>
