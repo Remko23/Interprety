@@ -30,11 +30,11 @@
       <tbody>
         <tr v-for="p in filteredProducts" :key="p.id">
           <td>{{ p.name }}</td>
-          <td>{{ p.description }}</td>
+          <td v-html="p.description"></td>
           <td>{{ p.price }} zł</td>
           <td class="text-end">
             <button @click="cart.addToCart(p)" class="btn btn-success btn-sm">
-              Kup
+              Dodaj do koszyka
             </button>
           </td>
         </tr>

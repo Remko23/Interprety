@@ -48,13 +48,13 @@
           <tbody>
             <tr v-for="order in filteredOrders" :key="order.id">
               <td class="fw-bold">#{{ order.id }}</td>
-              <td>{{ formatDate(order.order_date) }}</td>
+              <td>{{ formatDate(order.approval_date) }}</td>
               <td class="text-success fw-bold">
                 {{ calculateTotal(order.items) }} zł
               </td>
               <td>
                 <div class="small">{{ order.user_name }}</div>
-                <div class="text-muted smaller">{{ order.user_email }}</div>
+                <div class="text-muted smaller">{{ order.email }}</div>
               </td>
               <td>
                 <ul class="list-unstyled mb-0 smaller">
@@ -68,27 +68,35 @@
                 </ul>
               </td>
               <td>
-                <span :class="getStatusBadgeClass(order.status_name)">
-                  {{ order.status_name }}
+                <span :class="getStatusBadgeClass(order.status?.name)">
+                  {{ order.status?.name }}
                 </span>
               </td>
               <td class="text-center">
                 <div
                   v-if="
-                    order.status_name === 'NIEZREALIZOWANE' ||
-                    order.status_name === 'NOWE'
+                    ['UNCONFIRMED', 'CONFIRMED', 'NIEZREALIZOWANE', 'NOWE', 'NIEZATWIERDZONE', 'ZATWIERDZONE'].includes(order.status?.name)
                   "
                   class="btn-group btn-group-sm"
                 >
                   <button
-                    @click="updateStatus(order.id, 'ZREALIZOWANE')"
+                    v-if="['UNCONFIRMED', 'NOWE', 'NIEZATWIERDZONE'].includes(order.status?.name)"
+                    @click="updateStatus(order.id, 'CONFIRMED')"
+                    class="btn btn-primary"
+                    title="Zatwierdź"
+                  >
+                    Zatwierdź
+                  </button>
+                  <button
+                    v-if="['CONFIRMED', 'ZATWIERDZONE'].includes(order.status?.name)"
+                    @click="updateStatus(order.id, 'COMPLETED')"
                     class="btn btn-success"
                     title="Zrealizuj"
                   >
                     Zrealizuj
                   </button>
                   <button
-                    @click="updateStatus(order.id, 'ANULOWANE')"
+                    @click="updateStatus(order.id, 'CANCELED')"
                     class="btn btn-danger"
                     title="Anuluj"
                   >
@@ -113,17 +121,17 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
+import { useAuthStore } from "@/stores/auth";
 
 const orders = ref([]);
 const availableStatuses = ref([]);
-const currentFilter = ref("NIEZREALIZOWANE"); // Domyślnie pokazujemy niezrealizowane
+const currentFilter = ref("WSZYSTKIE");
 
-// Pobieranie danych z backendu Zad3
 const fetchOrders = async () => {
   try {
     const [ordersRes, statusRes] = await Promise.all([
       axios.get("/api/orders"),
-      axios.get("/api/statuses"),
+      axios.get("/api/status"),
     ]);
     orders.value = ordersRes.data;
     availableStatuses.value = statusRes.data;
@@ -133,26 +141,26 @@ const fetchOrders = async () => {
   }
 };
 
-// Filtrowanie zamówień na froncie
 const filteredOrders = computed(() => {
   if (currentFilter.value === "WSZYSTKIE") return orders.value;
-  return orders.value.filter((o) => o.status_name === currentFilter.value);
+  return orders.value.filter((o) => o?.status?.name === currentFilter.value);
 });
 
-// Zmiana statusu zamówienia (używamy PATCH/PUT zgodnie z API Zad3)
 const updateStatus = async (orderId, newStatusName) => {
   const statusObj = availableStatuses.value.find(
-    (s) => s.name === newStatusName
+    (s) => s.name.toUpperCase() === newStatusName.toUpperCase()
   );
-  if (!statusObj) return;
+  
+  if (!statusObj) {
+    alert(`Nie znaleziono statusu: ${newStatusName}`);
+    return;
+  }
 
   try {
-    // Zakładamy, że backend przyjmuje status_id w body
     await axios.patch(`/api/orders/${orderId}`, {
       status_id: statusObj.id,
     });
 
-    // Odświeżamy listę po sukcesie
     await fetchOrders();
   } catch (error) {
     const errorMsg =
@@ -169,17 +177,25 @@ const calculateTotal = (items) => {
 };
 
 const formatDate = (dateStr) => {
+  if (!dateStr) return "Brak daty";
   return new Date(dateStr).toLocaleString("pl-PL");
 };
 
 const getStatusBadgeClass = (status) => {
-  switch (status) {
+  switch (status?.toUpperCase()) {
     case "ZREALIZOWANE":
+    case "COMPLETED":
       return "badge bg-success";
     case "ANULOWANE":
+    case "CANCELED":
       return "badge bg-danger";
     case "NIEZREALIZOWANE":
+    case "UNCONFIRMED":
+    case "NOWE":
       return "badge bg-warning text-dark";
+    case "CONFIRMED":
+    case "ZATWIERDZONE":
+      return "badge bg-primary";
     default:
       return "badge bg-info";
   }

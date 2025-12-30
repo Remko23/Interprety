@@ -70,7 +70,7 @@
                   v-model="userData.username"
                   type="text"
                   class="form-control"
-                  placeholder="Imię i nazwisko"
+                  placeholder="Nazwa użytkownika"
                   required
                 />
               </div>
@@ -152,8 +152,8 @@ const handleOrderSubmit = async () => {
   // Przygotowanie danych do wysyłki (zgodnie z API)
   const orderData = {
     user_name: userData.username,
-    user_email: userData.email,
-    user_phone: userData.phone,
+    email: userData.email,
+    phone_number: userData.phone,
     items: cartStore.items.map((item) => ({
       product_id: item.id,
       quantity: item.quantity,
@@ -190,7 +190,6 @@ const handleOrderSubmit = async () => {
 </script>
 
 <style scoped>
-/* Dodatkowe style dla lepszego wyglądu na mobile */
 @media (max-width: 768px) {
   .table-responsive {
     border: 0;

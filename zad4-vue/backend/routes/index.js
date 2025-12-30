@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-const authMiddleware = require('../middleware/auth'); 
+const authMiddleware = require('../middleware/auth');
 const IndexController = require('../controllers/IndexController');
-const InitController = require('../controllers/InitController'); 
+const InitController = require('../controllers/InitController');
 
 const productRoutes = require('./products');
 const categoryRoutes = require('./categories');
@@ -15,12 +15,12 @@ router.get('/', IndexController.home);
 
 router.post('/init', InitController.init);
 
-router.use('/', userRoutes);
+router.use('/users', userRoutes);
 
 router.use('/categories', categoryRoutes);
 router.use('/status', statusRoutes);
 
-router.use(authMiddleware.verifyToken); 
+router.use(authMiddleware.verifyToken);
 
 router.use('/products', productRoutes);
 router.use('/orders', orderRoutes);

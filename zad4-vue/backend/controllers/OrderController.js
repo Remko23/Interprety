@@ -15,7 +15,7 @@ const STATUS = {
 };
 
 async function validateOrderData(orderData) {
-    
+
     if (!orderData.user_name || !orderData.email || !orderData.phone_number) {
         return "Nazwa użytkownika, email i numer telefonu są obowiązkowe.";
     }
@@ -74,7 +74,7 @@ function validateOpinion(opinionData) {
     if (numericRating < 1 || numericRating > 5) {
         return "Ocena musi być liczbą całkowitą z zakresu od 1 do 5.";
     }
-    
+
     if (!content || typeof content !== 'string' || content.trim().length < 5) {
         return "Treść opinii jest wymagana i musi zawierać co najmniej 5 znaków.";
     }
@@ -83,22 +83,22 @@ function validateOpinion(opinionData) {
 }
 
 exports.getAll = (req, res) => {
-   Order.getAll().then(
-       function(allOrders) {
-           res.json(allOrders);
-       }
-   ).catch(err => {
+    Order.getAll().then(
+        function (allOrders) {
+            res.json(allOrders);
+        }
+    ).catch(err => {
         console.error(err);
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień.');
     });
 };
 
 exports.getById = (req, res) => {
-   Order.getById(req.params.id).then(
-       function(Order) {
-           res.json(Order);
-       }
-   ).catch(err => {
+    Order.getById(req.params.id).then(
+        function (Order) {
+            res.json(Order);
+        }
+    ).catch(err => {
         console.error(err);
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień.');
     });
@@ -125,10 +125,10 @@ exports.getByUser = (req, res) => {
 
 exports.getByStatus = (req, res) => {
     const status = parseInt(req.params.status_id)
-   Order.getByStatus(status).then(orders => {
+    Order.getByStatus(status).then(orders => {
         res.status(StatusCodes.OK).json(orders);
-   }
-   ).catch(err => {
+    }
+    ).catch(err => {
         console.error(err);
         return problem(res, StatusCodes.INTERNAL_SERVER_ERROR, 'Błąd serwera', 'Wystąpił błąd serwera podczas pobierania zamówień wedlug statusu.');
     });
@@ -136,7 +136,7 @@ exports.getByStatus = (req, res) => {
 
 exports.store = async (req, res) => {
     const orderData = req.body;
-    const validationError = await validateOrderData(orderData); 
+    const validationError = await validateOrderData(orderData);
 
     if (validationError) {
         return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji danych', validationError, '/order-validation-failed');
@@ -167,17 +167,17 @@ exports.store = async (req, res) => {
 
             const orderItemsToInsert = items.map(item => {
                 const product = existingProducts.find(p => p.get('id') == item.product_id);
-                
+
                 return {
                     order_id: orderId,
                     product_id: item.product_id,
                     quantity: item.quantity,
-                    unit_price: product.get('price') 
+                    unit_price: product.get('price')
                 };
             });
 
             await OrderItem.collection(orderItemsToInsert).invokeThen('save', null, { transacting: trx, method: 'insert' });
-            
+
             return newOrder;
         });
 
@@ -194,10 +194,10 @@ exports.store = async (req, res) => {
 
 exports.updateById = (req, res) => {
     Order.update(req.body.Order).then(
-        function(Order) {
+        function (Order) {
             res.json(Order);
         }
-    )    
+    )
 }
 
 exports.updateStatus = async (req, res) => {
@@ -208,21 +208,22 @@ exports.updateStatus = async (req, res) => {
     }
 
     try {
-        const orderRecord = await Order.getById(orderId); 
+        const orderRecord = await Order.getById(orderId);
         if (!orderRecord) {
             return problem(res, StatusCodes.NOT_FOUND, 'Nie znaleziono zasobu', `Zamówienie o ID ${orderId} nie zostało znalezione.`, '/order-not-found');
         }
-        const currentStatusId = parseInt(orderRecord.get('status_id')); 
+        const currentStatusId = parseInt(orderRecord.get('status_id'));
         const numericNewStatusId = parseInt(newStatusId);
-        
+
         const validationError = validateStatusChange(currentStatusId, numericNewStatusId);
-        
+
         if (validationError) {
             return problem(res, StatusCodes.BAD_REQUEST, 'Nieprawidłowa zmiana statusu', validationError, '/invalid-status-transition');
         }
-        await Order.updateStatus(orderId, parseInt(newStatusId));
-        res.status(StatusCodes.OK).json({ 
-            message: `Status zamówienia ID ${orderId} został zmieniony na ${newStatusId}.` 
+        const approvalDate = (numericNewStatusId === STATUS.CONFIRMED) ? new Date() : undefined;
+        await Order.updateStatus(orderId, parseInt(newStatusId), approvalDate);
+        res.status(StatusCodes.OK).json({
+            message: `Status zamówienia ID ${orderId} został zmieniony na ${newStatusId}.`
         });
 
     } catch (err) {
@@ -234,7 +235,7 @@ exports.updateStatus = async (req, res) => {
 exports.addOpinion = async (req, res) => {
     const orderId = req.params.id;
     const opinionData = req.body;
-    
+
     const validationError = validateOpinion(opinionData);
     if (validationError) {
         return problem(res, StatusCodes.BAD_REQUEST, 'Błąd walidacji opinii', validationError, '/opinion-validation-failed');
@@ -251,12 +252,12 @@ exports.addOpinion = async (req, res) => {
         }
 
         const currentStatusId = order.get('status_id');
-        
+
         if (currentStatusId !== STATUS.COMPLETED && currentStatusId !== STATUS.CANCELED) {
             return problem(res, StatusCodes.FORBIDDEN, 'Niedozwolona operacja', 'Opinię można dodać tylko do zamówienia które jest ZREALIZOWANE lub ANULOWANE.', '/opinion-status-forbidden');
         }
 
-        const existingOpinion = await Opinion.where({ order_id: orderId }).fetch({ require: false }); 
+        const existingOpinion = await Opinion.where({ order_id: orderId }).fetch({ require: false });
         if (existingOpinion) {
             return problem(res, StatusCodes.CONFLICT, 'Conflict', 'Już dodano opinię do tego zamówienia.', '/opinion-already-exists');
         }
@@ -264,7 +265,7 @@ exports.addOpinion = async (req, res) => {
         if (req.user && req.user.role === 'KLIENT') {
             const orderUserName = order.get('user_name');
             const userNameFromToken = req.user.username;
-            
+
             if (userNameFromToken && orderUserName) {
                 if (userNameFromToken.toLowerCase() !== orderUserName.toLowerCase()) {
                     return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś.', '/opinion-user-mismatch');
@@ -273,19 +274,19 @@ exports.addOpinion = async (req, res) => {
                 return problem(res, StatusCodes.FORBIDDEN, 'Brak uprawnień', 'Możesz dodać opinię tylko do zamówienia, które sam złożyłeś. (Brak danych konta)', '/opinion-user-mismatch');
             }
         }
-        
-        opinionData.order_id = orderId; 
+
+        opinionData.order_id = orderId;
         opinionData.user_id = req.user.id;
-        
+
         const opinionModel = Opinion.forge(opinionData);
-        
-        const result = await opinionModel.save(null, { method: 'insert', require: false }); 
+
+        const result = await opinionModel.save(null, { method: 'insert', require: false });
         const newId = Array.isArray(result) && result.length > 0 ? result[0] : opinionModel.id;
-    
+
         if (newId) {
             opinionModel.set('id', newId);
         }
-        
+
         res.status(StatusCodes.CREATED).json({
             message: 'Opinia została dodana pomyślnie.',
             opinion: opinionModel

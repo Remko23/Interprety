@@ -70,11 +70,11 @@
 <script setup>
 import { reactive, ref } from "vue";
 import axios from "axios";
-import { useRouter, useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
-const route = useRoute();
-
+const auth = useAuthStore();
 const loading = ref(false);
 const errorMessage = ref("");
 
@@ -88,38 +88,22 @@ const handleLogin = async () => {
   errorMessage.value = "";
 
   try {
-    const payload = {
-      user_name: loginData.username,
+    // 1. Wysyłamy loginData.username jako login i password
+    const response = await axios.post("/api/users/login", {
+      login: loginData.username,
       password: loginData.password,
-    };
+    });
 
-    const response = await axios.post("/api/users/login", payload);
+    // 2. Używamy store do zapisania stanu
+    auth.login(response.data.accessToken, response.data.user);
 
-    const { token, role } = response.data;
-    localStorage.setItem("token", token);
-    localStorage.setItem("userRole", role);
-
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    const redirectPath =
-      route.query.redirect || (role === "admin" ? "/admin/orders" : "/");
-    router.push(redirectPath);
-  } catch (error) {
-    console.error("Szczegóły błędu:", error.response?.data); // Dodaj to, aby widzieć w konsoli F12 co dokładnie nie pasuje backendowi
-
-    if (error.response && error.response.status === 401) {
-      // Wyświetl szczegółowy komunikat z Twojej funkcji problem() na backendzie
-      errorMessage.value =
-        error.response.data.detail || "Błędny login lub hasło.";
-    } else if (error.response && error.response.data.errors) {
-      // Obsługa błędów walidacji (jeśli np. hasło jest za krótkie według backendu)
-      errorMessage.value =
-        "Błąd walidacji: " +
-        error.response.data.errors.map((e) => e.msg).join(", ");
-    } else {
-      errorMessage.value =
-        error.response?.data?.title || "Wystąpił błąd podczas logowania.";
-    }
+    router.push("/");
+  } catch (err) {
+    // 4. Backend używa funkcji 'problem', więc opis błędu jest w .detail
+    errorMessage.value =
+      err.response?.data?.detail ||
+      err.response?.data?.message ||
+      "Błąd logowania";
   } finally {
     loading.value = false;
   }
