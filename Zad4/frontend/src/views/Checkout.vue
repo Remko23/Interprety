@@ -27,7 +27,7 @@
                 <tr v-for="(item, index) in cartStore.items" :key="item.id">
                   <td class="ps-3">
                     <div class="fw-bold">{{ item.name }}</div>
-                    <small class="text-muted">{{ item.description }}</small>
+
                   </td>
                   <td>
                     <input
