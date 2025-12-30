@@ -13,14 +13,14 @@
     <div v-else class="row">
         <div v-for="opinion in opinions" :key="opinion.id" class="col-md-6 mb-3">
             <div class="card h-100 shadow-sm border-0">
-                <div class="card-body">
+                <div class="card-body" id="opinion-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                          <div class="text-warning">
                              <span v-for="n in 5" :key="n" class="fs-5">
                                  {{ n <= opinion.rating ? '★' : '☆' }}
                              </span>
                          </div>
-                         <small>{{ formatDate(opinion.created_at) }}</small>
+                         <small class="text">{{ formatDate(opinion.created_at) }}</small>
                     </div>
                     <p class="card-text">{{ opinion.content }}</p>
                 </div>

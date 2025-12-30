@@ -17,7 +17,7 @@ exports.verifyToken = (req, res, next) => {
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            return problem(res, StatusCodes.FORBIDDEN, 'Invalid or Expired Token', 'Token jest nieprawidłowy lub wygasł.', '/invalid-token');
+            return problem(res, StatusCodes.UNAUTHORIZED, 'Invalid or Expired Token', 'Token jest nieprawidłowy lub wygasł.', '/invalid-token');
         }
 
         req.user = decoded;

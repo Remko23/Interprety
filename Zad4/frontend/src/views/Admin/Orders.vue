@@ -179,7 +179,13 @@ const fetchOrders = async () => {
     availableStatuses.value = statusRes.data;
   } catch (error) {
     console.error("Błąd podczas pobierania danych:", error);
-    alert("Nie udało się pobrać listy zamówień.");
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
+      alert(`Błąd: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+    } else {
+        alert("Błąd połączenia lub inny problem.");
+    }
   }
 };
 

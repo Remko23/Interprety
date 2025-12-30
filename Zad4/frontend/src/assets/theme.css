@@ -71,6 +71,14 @@ a:hover {
     border-bottom: 1px solid #2C2C2C !important;
 }
 
+#opinion-body {
+    transition: all 0.35s ease;
+}
+
+#opinion-body:hover {
+    box-shadow: 0 0px 10px rgba(179, 157, 219, 0.7);
+}
+
 .btn {
     border-radius: 8px;
     font-weight: 600;
