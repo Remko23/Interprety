@@ -9,24 +9,16 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                  <p class="mb-0">
-                    Użyj tego narzędzia, aby załadować wstępne dane produktów do bazy.
-                    <br />
-                    <strong>Uwaga:</strong> Baza danych musi być pusta.
+                    <strong>Uwaga:</strong> Aby załadować dane produktów upewnij się, że baza produktów jest pusta!
                  </p>
                  <button @click="exportDatabase" class="btn btn-outline-primary btn-sm">
-                    <span v-if="exporting" class="spinner-border spinner-border-sm me-1"></span>
-                    Eksportuj Baze
+                    Pobierz Produkty <i class="fa-solid fa-floppy-disk"></i>
                  </button>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold">Plik JSON z produktami</label>
-              <input
-                type="file"
-                class="form-control"
-                accept=".json"
-                @change="handleFileUpload"
-              />
+              <input type="file" class="form-control" accept=".json" @change="handleFileUpload"/>
             </div>
 
             <div v-if="error" class="alert alert-danger">
@@ -36,17 +28,7 @@
               {{ success }}
             </div>
 
-            <button
-              @click="initDatabase"
-              class="btn w-100"
-              :disabled="loading || !fileContent"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm me-2"
-              ></span>
-              Zainicjalizuj Bazę
-            </button>
+            <button @click="initDatabase" class="btn w-100" :disabled="!fileContent"> Zainicjalizuj Bazę <i class="fa-solid fa-file-arrow-up"></i></button>
           </div>
         </div>
       </div>
@@ -59,8 +41,6 @@ import { ref } from "vue";
 import axios from "axios";
 
 const fileContent = ref(null);
-const loading = ref(false);
-const exporting = ref(false);
 const error = ref("");
 const success = ref("");
 
@@ -107,8 +87,6 @@ const handleFileUpload = (event) => {
 
 const initDatabase = async () => {
   if (!fileContent.value) return;
-
-  loading.value = true;
   error.value = "";
   success.value = "";
 
@@ -129,13 +107,10 @@ const initDatabase = async () => {
     } else {
       error.value = "Błąd połączenia z serwerem.";
     }
-  } finally {
-    loading.value = false;
   }
 };
 
 const exportDatabase = async () => {
-    exporting.value = true;
     error.value = "";
     success.value = "";
     
@@ -154,8 +129,6 @@ const exportDatabase = async () => {
         success.value = "Pobrano bazę danych.";
     } catch (err) {
         error.value = "Błąd podczas eksportu danych: " + (err.response?.data?.message || err.message);
-    } finally {
-        exporting.value = false;
     }
 };
 </script>

@@ -1,7 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/Home.vue'
-import CheckoutView from '@/views/Checkout.vue'
-import AdminOrders from '@/views/Admin/Orders.vue'
+import HomeView from '@/components/Home.vue'
+import CheckoutView from '@/components/Checkout.vue'
+import AdminOrders from '@/components/AdminOrdersList.vue'
+import AdminProductEdit from '@/components/AdminProductEdit.vue'
+import AdminProductsList from '@/components/AdminProductsList.vue'
+import AdminInitProducts from '@/components/AdminInitProducts.vue'
+import Login from '@/components/Login.vue'
+import Register from '@/components/Register.vue'
+import MyOrders from '@/components/MyOrders.vue'
+import OpinionList from '@/components/OpinionList.vue'
 
 import { useAuthStore } from '@/stores/auth';
 
@@ -11,13 +18,14 @@ const router = createRouter({
     { path: '/', component: HomeView },
     { path: '/checkout', component: CheckoutView },
     { path: '/admin/orders', component: AdminOrders, meta: { requiresAuth: true, role: 'PRACOWNIK' } },
-    { path: '/admin/products', component: () => import('@/views/Admin/ProductList.vue'), meta: { requiresAuth: true, role: 'PRACOWNIK' } },
-    { path: '/admin/products/:id', component: () => import('@/views/Admin/ProductEdit.vue'), meta: { requiresAuth: true, role: 'PRACOWNIK' } },
-    { path: '/admin/init', component: () => import('@/views/Admin/InitDb.vue'), meta: { requiresAuth: true, role: 'PRACOWNIK' } },
-    { path: '/login', component: () => import('@/views/Login.vue') },
-    { path: '/register', component: () => import('@/views/Register.vue') },
-    { path: '/my-orders', component: () => import('@/views/MyOrders.vue'), meta: { requiresAuth: true, role: ['KLIENT', 'PRACOWNIK'] } },
-    { path: '/opinions', component: () => import('@/views/OpinionList.vue') },
+    { path: '/admin/products', component: AdminProductsList, meta: { requiresAuth: true, role: 'PRACOWNIK' } },
+    { path: '/admin/products/add', component: AdminProductEdit, meta: { requiresAuth: true, role: 'PRACOWNIK' } },
+    { path: '/admin/products/:id', component: AdminProductEdit, meta: { requiresAuth: true, role: 'PRACOWNIK' } },
+    { path: '/admin/init', component: AdminInitProducts, meta: { requiresAuth: true, role: 'PRACOWNIK' } },
+    { path: '/login', component: Login },
+    { path: '/register', component: Register },
+    { path: '/my-orders', component: MyOrders, meta: { requiresAuth: true, role: ['KLIENT', 'PRACOWNIK'] } },
+    { path: '/opinions', component: OpinionList },
     { path: '/:pathMatch(.*)*', redirect: '/' }
   ]
 })

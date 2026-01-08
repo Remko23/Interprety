@@ -10,35 +10,15 @@
             <form @submit.prevent="handleLogin">
               <div class="mb-3">
                 <label class="form-label fw-bold">Nazwa użytkownika</label>
-                <input
-                  v-model="loginData.username"
-                  type="text"
-                  class="form-control"
-                  placeholder="Wpisz login"
-                  required
-                />
+                <input v-model="loginData.username" type="text" class="form-control" placeholder="Wpisz login" required/>
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold">Hasło</label>
-                <input
-                  v-model="loginData.password"
-                  type="password"
-                  class="form-control"
-                  placeholder="Wpisz hasło"
-                  required
-                />
+                <input v-model="loginData.password" type="password" class="form-control" placeholder="Wpisz hasło" required/>
               </div>
 
-              <button
-                type="submit"
-                class="btn btn-primary w-100 py-2 mt-2"
-                :disabled="loading"
-              >
-                <span
-                  v-if="loading"
-                  class="spinner-border spinner-border-sm me-2"
-                ></span>
-                Zaloguj się
+              <button type="submit" class="btn btn-primary w-100 py-2 mt-2">
+                Zaloguj się <i class="fa-solid fa-sign-in-alt"></i>
               </button>
             </form>
 
@@ -47,19 +27,16 @@
             </div>
 
             <div class="mt-4 text-center">
-              <p class="text-muted small">Nie masz konta?</p>
-              <router-link
-                to="/register"
-                class="btn btn-outline-secondary btn-sm"
-              >
-                Zarejestruj się
+              <p class="text-warning small">Nie masz konta?</p>
+              <router-link to="/register" class="btn btn-outline-secondary btn-sm">
+                Zarejestruj się <i class="fa-solid fa-user-plus"></i>
               </router-link>
             </div>
           </div>
         </div>
         <div class="text-center mt-3">
           <router-link to="/" class="text-decoration-none small text-secondary">
-            Wróć do sklepu bez logowania
+            <i class="fa-solid fa-arrow-left-long"></i> Wróć do sklepu bez logowania
           </router-link>
         </div>
       </div>
@@ -75,7 +52,6 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 const auth = useAuthStore();
-const loading = ref(false);
 const errorMessage = ref("");
 
 const loginData = reactive({
@@ -84,7 +60,6 @@ const loginData = reactive({
 });
 
 const handleLogin = async () => {
-  loading.value = true;
   errorMessage.value = "";
 
   try {
@@ -100,8 +75,6 @@ const handleLogin = async () => {
       err.response?.data?.detail ||
       err.response?.data?.message ||
       "Błąd logowania";
-  } finally {
-    loading.value = false;
   }
 };
 </script>

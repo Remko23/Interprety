@@ -8,12 +8,8 @@
 
     <div v-else>
       <h2 class="mb-4">Twoje Zamówienie</h2>
-
       <div v-if="cartStore.items.length === 0" class="alert alert-info shadow-sm">
-        Twój koszyk jest pusty.
-        <router-link to="/" class="alert-link"
-          >Wróć do listy produktów</router-link
-        >, aby coś dodać.
+        Twój koszyk jest pusty. <router-link to="/" class="alert-link">Wróć do listy produktów</router-link>, aby coś dodać.
       </div>
 
       <div v-else class="row">
@@ -37,23 +33,12 @@
 
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      v-model.number="item.quantity"
-                      @change="cartStore.save()"
-                      min="1"
-                      class="form-control form-control-sm"
-                    />
+                    <input type="number" v-model.number="item.quantity" @input="validateQuantity(item)" min="1" max="1000" class="form-control form-control-sm"/>
                   </td>
                   <td>{{ item.price }} zł</td>
                   <td>{{ (item.price * item.quantity).toFixed(2) }} zł</td>
                   <td class="text-center">
-                    <button
-                      @click="cartStore.removeFromCart(index)"
-                      class="btn btn-outline-danger btn-sm"
-                    >
-                      Usuń
-                    </button>
+                    <button @click="cartStore.removeFromCart(index)" class="btn btn-outline-danger btn-sm"> Usuń <i class="fa-solid fa-trash"></i> </button>
                   </td>
                 </tr>
               </tbody>
@@ -72,80 +57,34 @@
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label class="form-label small fw-bold">Imię</label>
-                  <input
-                    v-model="userData.firstName"
-                    type="text"
-                    class="form-control"
-                    placeholder="Wpisz imię"
-                    required
-                  />
+                  <input v-model="userData.firstName" type="text" class="form-control" placeholder="Wpisz imię" required/>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label small fw-bold">Nazwisko</label>
-                  <input
-                    v-model="userData.lastName"
-                    type="text"
-                    class="form-control"
-                    placeholder="Wpisz nazwisko"
-                    required
-                  />
+                  <input v-model="userData.lastName" type="text" class="form-control" placeholder="Wpisz nazwisko" required/>
                 </div>
               </div>
 
               <div class="mb-3">
-                <label class="form-label small fw-bold"
-                  >Nazwa użytkownika</label
-                >
-                <input
-                  v-model="userData.username"
-                  type="text"
-                  class="form-control"
-                  placeholder="Nazwa użytkownika"
-                  required
-                  readonly
-                />
+                <label class="form-label small fw-bold">Nazwa użytkownika</label>
+                <input v-model="userData.username" type="text" class="form-control" placeholder="Nazwa użytkownika" required readonly/>
               </div>
               <div class="mb-3">
                 <label class="form-label small fw-bold">Email</label>
-                <input
-                  v-model="userData.email"
-                  type="email"
-                  class="form-control"
-                  placeholder="uzytkownik@example.com"
-                  required
-                />
+                <input v-model="userData.email" type="email" class="form-control" placeholder="uzytkownik@example.com" required/>
               </div>
               <div class="mb-3">
                 <label class="form-label small fw-bold">Telefon</label>
-                <input
-                  v-model="userData.phone"
-                  type="tel"
-                  class="form-control"
-                  placeholder="Numer telefonu"
-                  required
-                />
+                <input v-model="userData.phone" type="tel" class="form-control" placeholder="Numer telefonu" required/>
               </div>
 
-              <hr />
+              <hr/>
 
               <div class="d-flex justify-content-between mb-3">
                 <span class="h5">Suma:</span>
-                <span class="h5 text-warning"
-                  >{{ cartStore.totalPrice }} zł</span
-                >
+                <span class="h5 text-warning">{{ cartStore.totalPrice }} zł</span>
               </div>
-
-              <button
-                type="submit"
-                class="btn btn-success btn-lg w-100"
-                :disabled="loading"
-              >
-                <span
-                  v-if="loading"
-                  class="spinner-border spinner-border-sm me-2"
-                ></span>
-                Zatwierdź zamówienie
-              </button>
+              <button type="submit" class="btn btn-success btn-lg w-100"> Zatwierdź zamówienie <i class="fa-solid fa-check"></i></button>
             </form>
 
             <div v-if="errorMessage" class="alert alert-danger mt-3 small p-2">
@@ -164,13 +103,10 @@ import { ref, reactive, onMounted } from "vue";
 import { useCartStore } from "@/stores/cart";
 import { useAuthStore } from "@/stores/auth";
 import axios from "axios";
-import { useRouter } from "vue-router";
 
 const cartStore = useCartStore();
 const authStore = useAuthStore();
-const router = useRouter();
 
-const loading = ref(false);
 const errorMessage = ref("");
 const orderSuccess = ref(false);
 
@@ -189,7 +125,6 @@ onMounted(() => {
 });
 
 const handleOrderSubmit = async () => {
-  loading.value = true;
   errorMessage.value = "";
   const orderData = {
     user_name: userData.username,
@@ -215,8 +150,15 @@ const handleOrderSubmit = async () => {
     } else {
       errorMessage.value = "Brak połączenia z serwerem.";
     }
-  } finally {
-    loading.value = false;
   }
+};
+
+const validateQuantity = (item) => {
+  if (item.quantity > 1000) {
+    item.quantity = 1000;
+  } else if (item.quantity < 1 && item.quantity !== '') {
+    item.quantity = 1;
+  }
+  cartStore.save();
 };
 </script>

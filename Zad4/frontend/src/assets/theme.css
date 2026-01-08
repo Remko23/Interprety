@@ -46,11 +46,12 @@ a:hover {
 }
 
 .alert-link {
-    color: #DADADA;
+    color: #FFFADA;
 }
 
 .alert-link:hover {
     color: #121212;
+    text-shadow: none;
 }
 
 .text-warning {
@@ -101,6 +102,12 @@ a:hover {
     border-color: #B39DDB;
     color: #121212;
     box-shadow: 0 4px 15px rgba(179, 157, 219, 0.25);
+}
+
+.btn.btn-warning {
+    background-color: #B39DDB;
+    border-color: #B39DDB;
+    color: #121212;
 }
 
 .form-control,

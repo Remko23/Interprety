@@ -18,7 +18,7 @@ const InitController = {
             const savedProducts = [];
             for (const productData of productsToInitialize) {
                 if (!productData.name || !productData.price || !productData.category_id) {
-                     console.warn('Skipping product with missing required fields:', productData);
+                     console.warn('Pomijanie produktów z brakujami w wymaganych polach', productData);
                      continue; 
                 }
                 const newProduct = await Product.create(productData);
@@ -30,7 +30,7 @@ const InitController = {
             }
 
             return res.status(StatusCodes.OK).json({
-                message: `Successfully initialized ${savedProducts.length} products.`,
+                message: `Zainicjalizowano ${savedProducts.length} produktów.`,
                 products: savedProducts
             });
 

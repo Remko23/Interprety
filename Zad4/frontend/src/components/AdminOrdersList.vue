@@ -1,31 +1,13 @@
 <template>
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Panel Administratora - Zamówienia</h2>
+      <h3>Panel Administratora - Zamówienia</h3>
 
       <div class="btn-group shadow-sm">
-        <button
-          v-for="status in availableStatuses"
-          :key="status.id"
-          @click="currentFilter = status.name"
-          class="btn"
-          :class="
-            currentFilter === status.name
-              ? 'btn-primary'
-              : 'btn-outline-primary'
-          "
-        >
-          {{ status.name }}
+        <button v-for="status in availableStatuses" :key="status.id" @click="currentFilter = status.name" class="btn btn-primary">
+          {{ translateStatus(status.name) }}
         </button>
-        <button
-          @click="currentFilter = 'WSZYSTKIE'"
-          class="btn"
-          :class="
-            currentFilter === 'WSZYSTKIE'
-              ? 'btn-secondary'
-              : 'btn-outline-secondary'
-          "
-        >
+        <button @click="currentFilter = 'WSZYSTKIE'" class="btn btn-secondary">
           Wszystkie
         </button>
       </div>
@@ -50,31 +32,21 @@
             <tr v-for="order in filteredOrders" :key="order.id">
               <td class="fw-bold">#{{ order.id }}</td>
               <td>{{ formatDate(order.approval_date) }}</td>
-              <td class="text-warning fw-bold">
-                {{ calculateTotal(order.items) }} zł
-              </td>
+              <td class="text-warning fw-bold text-nowrap"> {{ calculateTotal(order.items) }} zł</td>
               <td>
                 <div class="small">{{ order.user_name }}</div>
-                <div class="text-muted smaller">{{ order.email }}</div>
+                <div class="smaller">{{ order.email }}</div>
               </td>
               <td>
                 <ul class="list-unstyled mb-0 smaller">
-                  <li v-for="item in order.items" :key="item.id">
-                    •
-                    {{ item.product_name || "Produkt #" + item.product_id }} ({{
-                      item.quantity
-                    }}
-                    szt.)
-                  </li>
+                  <li v-for="item in order.items" :key="item.id"> <i class="fa-solid fa-caret-right"></i> {{ item.product_name}} ({{item.quantity}}szt.)</li>
                 </ul>
               </td>
               <td>
                  <div v-if="order.opinion && order.opinion.id">
-                     <button @click="openOpinionModal(order.opinion)" class="btn btn-sm btn-outline-info" title="Zobacz treść">
-                         Podgląd
-                     </button>
+                     <button @click="openOpinionModal(order.opinion)" class="btn btn-sm btn-outline-info" title="Zobacz treść"><i class="fa-solid fa-eye"></i></button>
                  </div>
-                 <span v-else class="text-warning small">-</span>
+                 <span v-else class="text-warning"><i class="fa-solid fa-x"></i></span>
               </td>
               <td>
                 <span class="text-pink fw-bold">
@@ -82,37 +54,12 @@
                 </span>
               </td>
               <td class="text-center">
-                <div
-                  v-if="
-                    ['UNCONFIRMED', 'CONFIRMED', 'NIEZREALIZOWANE', 'NOWE', 'NIEZATWIERDZONE', 'ZATWIERDZONE'].includes(order.status?.name)
-                  "
-                  class="btn-group btn-group-sm"
-                >
-                  <button
-                    v-if="['UNCONFIRMED', 'NOWE', 'NIEZATWIERDZONE'].includes(order.status?.name)"
-                    @click="updateStatus(order.id, 'CONFIRMED')"
-                    class="btn btn-primary"
-                    title="Zatwierdź"
-                  >
-                    Zatwierdź
-                  </button>
-                  <button
-                    v-if="['CONFIRMED', 'ZATWIERDZONE'].includes(order.status?.name)"
-                    @click="updateStatus(order.id, 'COMPLETED')"
-                    class="btn btn-success"
-                    title="Zrealizuj"
-                  >
-                    Zrealizuj
-                  </button>
-                  <button
-                    @click="updateStatus(order.id, 'CANCELED')"
-                    class="btn btn-danger"
-                    title="Anuluj"
-                  >
-                    Anuluj
-                  </button>
+                <div v-if=" ['UNCONFIRMED', 'CONFIRMED'].includes(order.status?.name)" class="btn-group btn-group-sm">
+                  <button v-if="['UNCONFIRMED'].includes(order.status?.name)" @click="updateStatus(order.id, 'CONFIRMED')" class="btn btn-primary" title="Zatwierdź"> Zatwierdź </button>
+                  <button v-if="['CONFIRMED'].includes(order.status?.name)" @click="updateStatus(order.id, 'COMPLETED')" class="btn btn-success" title="Zrealizuj"> Zrealizuj </button>
+                  <button @click="updateStatus(order.id, 'CANCELED')" class="btn btn-danger" title="Anuluj"> Anuluj </button>
                 </div>
-                <span v-else class="text-warning small italic">-</span>
+                <span v-else class="text-warning"><i class="fa-solid fa-x"></i></span>
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
@@ -151,9 +98,6 @@
             <div class="text-end text-muted small">
                  Dodano: {{ formatDate(selectedOpinion.created_at) }}
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeOpinionModal">Zamknij</button>
           </div>
         </div>
       </div>
@@ -230,15 +174,10 @@ const formatDate = (dateStr) => {
 
 const translateStatus = (status) => {
     switch (status?.toUpperCase()) {
-        case 'ZREALIZOWANE':
         case 'COMPLETED': return 'ZREALIZOWANE';
-        case 'ANULOWANE':
         case 'CANCELED': return 'ANULOWANE';
-        case 'NIEZREALIZOWANE':
         case 'UNCONFIRMED': return 'NIEZATWIERDZONE';
-        case 'NOWE': return 'NOWE';
-        case 'CONFIRMED':
-        case 'ZATWIERDZONE': return 'ZATWIERDZONE';
+        case 'CONFIRMED': return 'ZATWIERDZONE';
         default: return status;
     }
 };

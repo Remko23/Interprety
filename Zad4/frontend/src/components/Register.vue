@@ -17,42 +17,20 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Hasło</label>
-              <input
-                v-model="registerData.password"
-                type="password"
-                class="form-control"
-                required
-                minlength="4"
-              />
+              <input v-model="registerData.password" type="password" class="form-control" required minlength="4"/>
             </div>
             
              <div class="mb-3">
               <label class="form-label">Powtórz hasło</label>
-              <input
-                v-model="confirmPassword"
-                type="password"
-                class="form-control"
-                required
-                minlength="4"
-              />
+              <input v-model="confirmPassword" type="password" class="form-control" required minlength="4"/>
             </div>
 
             <div v-if="error" class="alert alert-danger">{{ error }}</div>
             <div v-if="success" class="alert alert-success">{{ success }}</div>
 
-            <button
-              type="submit"
-              class="btn btn-primary w-100"
-              :disabled="loading"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm me-2"
-              ></span>
-              Zarejestruj się
-            </button>
+            <button type="submit" class="btn btn-primary w-100">Zarejestruj się <i class="fa-solid fa-user-plus"></i></button>
             <div class="mt-3 text-center">
-              <router-link to="/login">Masz już konto? Zaloguj się</router-link>
+              <router-link to="/login">Masz już konto? Zaloguj się <i class="fa-solid fa-sign-in-alt"></i></router-link>
             </div>
           </form>
         </div>
@@ -72,7 +50,6 @@ const registerData = reactive({
   password: "",
 });
 const confirmPassword = ref("");
-const loading = ref(false);
 const error = ref("");
 const success = ref("");
 
@@ -82,7 +59,6 @@ const handleRegister = async () => {
       return;
   }
 
-  loading.value = true;
   error.value = "";
   success.value = "";
 
@@ -104,8 +80,6 @@ const handleRegister = async () => {
     } else {
         error.value = "Błąd połączenia z serwerem.";
     }
-  } finally {
-    loading.value = false;
   }
 };
 </script>

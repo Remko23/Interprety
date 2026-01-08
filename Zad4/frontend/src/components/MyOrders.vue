@@ -2,11 +2,7 @@
   <div class="container mt-4">
     <h2 class="mb-4">Moje zamówienia</h2>
 
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary"></div>
-    </div>
-
-    <div v-else-if="orders.length === 0" class="alert alert-info">
+    <div v-if="orders.length === 0" class="alert alert-info">
       Nie złożono jeszcze żadnych zamówień.
     </div>
 
@@ -16,9 +12,7 @@
           <span>
             <strong  class="text-warning">Zamówienie nr. {{ order.id }}</strong>
           </span>
-          <span class="text-pink fw-bold">
-            {{ translateStatus(order.status?.name) }}
-          </span>
+          <span class="text-pink fw-bold">{{ translateStatus(order.status?.name) }}</span>
         </div>
         <div class="card-body">
           <ul class="list-group list-group-flush mb-3">
@@ -31,12 +25,8 @@
                <h5 class="text-warning mb-0">Suma: {{ calculateTotal(order.items) }} zł</h5>
                
                <div v-if="canRate(order)">
-                   <button v-if="!order.opinion" @click="openRateModal(order)" class="btn btn-outline-warning">
-                       Oceń zamówienie
-                   </button>
-                   <span v-else class="text-warning fw-bold">
-                       Opinia dodana!
-                   </span>
+                   <button v-if="!order.opinion" @click="openRateModal(order)" class="btn btn-outline-warning">Oceń zamówienie <i class='fa-solid fa-star'></i></button>
+                   <span v-else class="text-warning fw-bold">Opinia dodana!</span>
                </div>
           </div>
         </div>
@@ -55,21 +45,13 @@
             <form @submit.prevent="submitOpinion">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Ocena (1-5)</label>
-                    <div class="d-flex gap-2">
-                        <button 
-                            type="button" 
-                            v-for="star in 5" 
-                            :key="star"
-                            @click="opinionForm.rating = star"
-                            class="btn btn-sm"
-                            :class="opinionForm.rating >= star ? 'btn-warning' : 'btn-outline-secondary'"
-                        >
+                    <div class="d-flex gap-2" @mouseleave="hoveredRating = 0">
+                        <button type="button" v-for="star in 5" :key="star" @click="opinionForm.rating = star" @mouseover="hoveredRating = star" class="btn btn-sm" :class="star <= (hoveredRating || opinionForm.rating) ? 'btn-warning' : 'btn-outline-secondary'">
                         ★
                         </button>
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Treść opinii</label>
                     <textarea v-model="opinionForm.content" class="form-control" rows="3" required minlength="5"></textarea>
                 </div>
                 
@@ -78,9 +60,8 @@
 
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-secondary" @click="closeModal">Anuluj</button>
-                    <button type="submit" class="btn btn-primary" :disabled="submitting">
-                        <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
-                        Wyślij
+                    <button type="submit" class="btn btn-primary">
+                        Wyślij <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </div>
             </form>
@@ -99,11 +80,10 @@ import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
 const orders = ref([]);
-const loading = ref(true);
+const hoveredRating = ref(0);
 
 const showModal = ref(false);
 const selectedOrder = ref(null);
-const submitting = ref(false);
 const errorMsg = ref("");
 const successMsg = ref("");
 
@@ -113,20 +93,17 @@ const opinionForm = reactive({
 });
 
 const fetchMyOrders = async () => {
-    loading.value = true;
     try {
         const response = await axios.get(`/api/orders/user/${auth.user.login}`);
         orders.value = response.data.reverse();
     } catch (error) {
         console.error(error);
-    } finally {
-        loading.value = false;
     }
 }
 
 const canRate = (order) => {
     const status = order.status?.name?.toUpperCase();
-    return status === 'ZREALIZOWANE' || status === 'COMPLETED' || status === 'ANULOWANE' || status === 'CANCELED';
+    return status === 'COMPLETED' || status === 'CANCELED';
 };
 
 const openRateModal = (order) => {
@@ -151,7 +128,6 @@ const submitOpinion = async () => {
         return;
     }
     
-    submitting.value = true;
     errorMsg.value = "";
     
     try {
@@ -169,8 +145,6 @@ const submitOpinion = async () => {
         
     } catch (err) {
         errorMsg.value = err.response?.data?.detail || "Błąd podczas dodawania opinii.";
-    } finally {
-        submitting.value = false;
     }
 };
 
@@ -180,21 +154,11 @@ const calculateTotal = (items) => {
     .toFixed(2);
 };
 
-const formatDate = (dateStr) => {
-    if(!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('pl-PL') + ' ' + new Date(dateStr).toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'});
-}
-
 const translateStatus = (status) => {
     switch (status?.toUpperCase()) {
-        case 'ZREALIZOWANE':
         case 'COMPLETED': return 'ZREALIZOWANE';
-        case 'ANULOWANE':
         case 'CANCELED': return 'ANULOWANE';
-        case 'NIEZREALIZOWANE':
         case 'UNCONFIRMED': return 'NIEZATWIERDZONE';
-        case 'NOWE': return 'NOWE';
-        case 'CONFIRMED':
         case 'ZATWIERDZONE': return 'ZATWIERDZONE';
         default: return status;
     }

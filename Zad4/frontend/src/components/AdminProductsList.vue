@@ -2,7 +2,9 @@
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>Zarządzanie Produktami</h2>
-       <!-- Optional: Add Product Button logic later if needed -->
+      <router-link to="/admin/products/add" class="btn btn-success">
+          <i class="fa-solid fa-plus"></i> Dodaj produkt
+      </router-link>
     </div>
 
     <div class="card shadow-sm">
@@ -26,9 +28,7 @@
                  {{ getCategoryName(p.category_id) }}
               </td>
               <td class="text-center">
-                <router-link :to="`/admin/products/${p.id}`" class="btn btn-sm btn-primary">
-                  Edytuj
-                </router-link>
+                <router-link :to="`/admin/products/${p.id}`" class="btn btn-sm btn-primary"><i class="fa-solid fa-pen-to-square"></i></router-link>
               </td>
             </tr>
           </tbody>

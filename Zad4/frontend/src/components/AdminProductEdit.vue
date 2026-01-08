@@ -4,14 +4,10 @@
       <div class="col-md-8">
         <div class="card shadow">
           <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Edytuj Produkt</h4>
+            <h4 class="mb-0">{{ isEditMode ? 'Edycja produktu' : 'Dodawanie produktu' }} <i class="fa-solid" :class="isEditMode ? 'fa-pen-to-square' : 'fa-plus'"></i></h4>
           </div>
           <div class="card-body">
-            <div v-if="loadingData" class="text-center py-5">
-              <div class="spinner-border text-primary"></div>
-            </div>
-            
-            <form v-else @submit.prevent="handleSave">
+            <form @submit.prevent="handleSave">
               <div class="mb-3">
                 <label class="form-label fw-bold">Nazwa</label>
                 <input v-model="product.name" type="text" class="form-control" required />
@@ -21,12 +17,11 @@
                 <label class="form-label fw-bold">Opis</label>
                 <div class="input-group">
                     <textarea v-model="product.description" class="form-control" rows="4"></textarea>
-                    <button type="button" @click="optimizeDescription" class="btn btn-outline-info" title="Optymalizuj opis (SEO)">
-                         <span v-if="seoLoading" class="spinner-border spinner-border-sm"></span>
-                         <span v-else>Optymalizuj</span>
+                    <button v-if="isEditMode" type="button" @click="optimizeDescription" class="btn btn-outline-info" title="Optymalizuj opis (SEO)">
+                         <span>Optymalizuj <i class="fa-solid fa-wand-magic-sparkles"></i></span>
                     </button>
                 </div>
-                <small class="text-muted">Kliknij "Optymalizuj", aby wygenerować opis SEO.</small>
+                <small class="text-muted" v-if="!isEditMode">Kliknij "Optymalizuj", aby wygenerować opis SEO.</small>
               </div>
 
               <div class="row">
@@ -52,11 +47,10 @@
               <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
 
               <div class="d-flex justify-content-between mt-4">
-                <router-link to="/admin/products" class="btn btn-secondary">Anuluj</router-link>
-                <button type="submit" class="btn btn-success" :disabled="saving">
-                    <span v-if="saving" class="spinner-border spinner-border-sm me-2"></span>
-                    Zapisz zmiany
-                </button>
+                <router-link to="/admin/products" class="btn btn-secondary">Anuluj <i class="fa-solid fa-ban"></i></router-link>
+                <button type="submit" class="btn btn-success">
+                    {{ isEditMode ? 'Zapisz zmiany' : 'Dodaj produkt' }} <i class="fa-solid" :class="isEditMode ? 'fa-file-arrow-down' : 'fa-check'"></i>
+                </button> 
               </div>
             </form>
           </div>
@@ -67,43 +61,53 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
 const route = useRoute();
 const router = useRouter();
 const productId = route.params.id;
+const isEditMode = computed(() => !!productId);
 
-const product = ref({});
+const product = ref({
+    name: '',
+    description: '',
+    price: '',
+    weight: '',
+    category_id: null
+});
 const categories = ref([]);
-
-const loadingData = ref(true);
-const saving = ref(false);
-const seoLoading = ref(false);
 
 const errorMessage = ref("");
 const successMessage = ref("");
 
 const fetchData = async () => {
-    loadingData.value = true;
     try {
-        const [pRes, cRes] = await Promise.all([
-            axios.get(`/api/products/${productId}`),
-            axios.get('/api/categories')
-        ]);
-        product.value = pRes.data;
-        categories.value = cRes.data;
+        const requests = [axios.get('/api/categories')];
+        if (isEditMode.value) {
+            requests.push(axios.get(`/api/products/${productId}`));
+        }
+        
+        const responses = await Promise.all(requests);
+        categories.value = responses[0].data;
+        
+        if (isEditMode.value) {
+            product.value = responses[1].data;
+        }
     } catch (err) {
-        errorMessage.value = "Nie udało się pobrać danych produktu.";
-    } finally {
-        loadingData.value = false;
+        errorMessage.value = "Nie udało się pobrać danych.";
     }
 }
 
 const optimizeDescription = async () => {
-    seoLoading.value = true;
+    if (!product.value.name) return;
     try {
+        if (!isEditMode.value) {
+            alert("Optymalizacja dostępna tylko dla zapisanych produktów.");
+            return;
+        }
+
         const res = await axios.get(`/api/products/${productId}/seo-description`);        
         if (typeof res.data === 'string') {
             product.value.description = res.data;
@@ -114,36 +118,43 @@ const optimizeDescription = async () => {
         }
     } catch(err) {
         alert("Błąd podczas generowania opisu SEO.");
-    } finally {
-        seoLoading.value = false;
     }
 }
 
 const handleSave = async () => {
-    saving.value = true;
     errorMessage.value = "";
     successMessage.value = "";
     
     try {
-        await axios.put(`/api/products/${productId}`, {
-            product: {
-                id: productId,
-                name: product.value.name,
-                description: product.value.description,
-                price: product.value.price,
-                weight: product.value.weight,
-                category_id: product.value.category_id
-            }
-        });
-        successMessage.value = "Produkt został zaktualizowany.";
+        const productData = {
+            name: product.value.name,
+            description: product.value.description,
+            price: parseFloat(product.value.price),
+            weight: parseFloat(product.value.weight),
+            category_id: product.value.category_id
+        };
+
+        if (isEditMode.value) {
+            await axios.put(`/api/products/${productId}`, { 
+                product: { ...productData, id: productId } 
+            });
+            successMessage.value = "Produkt został zaktualizowany.";
+            setTimeout(() => {
+                router.push('/admin/products');
+            }, 1000);
+        } else {
+            await axios.post('/api/products', productData);
+            successMessage.value = "Produkt został dodany pomyślnie.";
+            setTimeout(() => {
+                router.push('/admin/products');
+            }, 1000);
+        }
     } catch (err) {
          if (err.response && err.response.data) {
             errorMessage.value = err.response.data.detail || err.response.data.message || "Błąd zapisu.";
         } else {
             errorMessage.value = "Błąd połączenia z serwerem.";
         }
-    } finally {
-        saving.value = false;
     }
 }
 

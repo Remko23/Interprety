@@ -2,11 +2,7 @@
   <div class="container mt-4">
     <h2 class="mb-4">Opinie klientów</h2>
     
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary"></div>
-    </div>
-    
-    <div v-else-if="opinions.length === 0" class="alert alert-info">
+    <div v-if="opinions.length === 0" class="alert alert-info">
         Brak opinii o obsłudze zamówień.
     </div>
 
@@ -35,17 +31,13 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 const opinions = ref([]);
-const loading = ref(true);
 
 const fetchOpinions = async () => {
-    loading.value = true;
     try {
         const response = await axios.get('/api/opinions');
         opinions.value = response.data;
     } catch (error) {
         console.error("Błąd pobierania opinii:", error);
-    } finally {
-        loading.value = false;
     }
 };
 
